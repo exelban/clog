@@ -1,10 +1,21 @@
-// clog color logs for your go application.
+// Package clog adding colors to your go application logs.
 /*
+Usage
 
-INFORMATION
+	package main
 
-some text
+	import (
+		"github.com/exelban/clog"
+		"log"
+	)
 
+	func main () {
+		w := clog.Install(clog.Cyan)
+
+		w.Custom("[ERROR]", clog.Red)
+
+		log.Print("[ERROR] error text")
+	}
  */
 package clog
 

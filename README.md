@@ -29,5 +29,12 @@ func main () {
 }
 ```
 
+# What's new
+## 1.0.1
+- added predefined colors for prefixes [ERROR], [INFO], [WARN] and [DEBUG]
+
+## 1.0.0
+- first release
+
 # Licence
 [MIT License](https://github.com/exelban/clog/blob/master/LICENSE)

@@ -89,6 +89,12 @@ func Install(v...interface{}) *Writer {
 		color: generate(v...),
 	}
 	log.SetOutput(w)
+
+	w.Custom("[ERROR]", Red)
+	w.Custom("[INFO]", HiYellow)
+	w.Custom("[WARN]", HiGreen)
+	w.Custom("[DEBUG]", HiCyan)
+
 	return w
 }
 

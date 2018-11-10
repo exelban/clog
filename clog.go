@@ -12,11 +12,9 @@ Usage
 	func main () {
 		w := clog.Install(clog.Cyan)
 
-		w.Custom("[ERROR]", clog.Red)
-
 		log.Print("[ERROR] error text")
 	}
- */
+*/
 package clog
 
 import (
@@ -32,9 +30,9 @@ import (
 // output to an io.Writer. Each logging operation makes a single call to
 // the Writer's Write method.
 type Writer struct {
-	out io.Writer
+	out    io.Writer
 	colors map[string]string
-	color string
+	color  string
 
 	mu sync.Mutex
 }
@@ -82,11 +80,11 @@ const (
 )
 
 // Install creating proxy writer for output and set it for log.
-func Install(v...interface{}) *Writer {
+func Install(v ...interface{}) *Writer {
 	w := &Writer{
-		out: os.Stderr,
+		out:    os.Stderr,
 		colors: make(map[string]string),
-		color: generate(v...),
+		color:  generate(v...),
 	}
 	log.SetOutput(w)
 
@@ -143,20 +141,20 @@ func (w *Writer) Write(b []byte) (n int, err error) {
 func (w *Writer) Prefix(prefix string, f func(clog Colors) string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	w.colors[prefix] =  f(&colors{})
+	w.colors[prefix] = f(&colors{})
 }
 
 // Custom allow to set custom colors for prefix.
 // Accept parameters in next configuration: [textColor, backgroundColor, style].
-func (w *Writer) Custom(prefix string, v...interface{}) {
+func (w *Writer) Custom(prefix string, v ...interface{}) {
 	if len(v) == 0 {
-		panic(fmt.Sprintf("clog: provide minium one parameter for %s", prefix))
+		panic(fmt.Sprintf("clog: missed configuration for %s", prefix))
 	}
 
 	switch v[0].(type) {
 	case int:
 	default:
-		panic(fmt.Sprintf("clog: wrong type for %s", prefix))
+		panic(fmt.Sprintf("clog: wrong configuration for %s (%v)", prefix, v))
 	}
 
 	w.mu.Lock()
@@ -179,7 +177,7 @@ func (w *Writer) unset() {
 	fmt.Fprintf(w.out, "%s[%dm", escape, Reset)
 }
 
-func generate(v...interface{}) string {
+func generate(v ...interface{}) string {
 	var color string
 
 	switch len(v) {
@@ -221,38 +219,52 @@ type Colors interface {
 	HiWhite() string
 }
 
-type colors struct {}
+type colors struct{}
 
 // Black text color.
 func (c *colors) Black() string { return generate(Black) }
+
 // Red text color.
 func (c *colors) Red() string { return generate(Red) }
+
 // Green text color.
 func (c *colors) Green() string { return generate(Green) }
+
 // Yellow text color.
 func (c *colors) Yellow() string { return generate(Yellow) }
+
 // Blue text color.
 func (c *colors) Blue() string { return generate(Blue) }
+
 // Magenta text color.
 func (c *colors) Magenta() string { return generate(Magenta) }
+
 // Cyan text color.
 func (c *colors) Cyan() string { return generate(Cyan) }
+
 // White text color.
 func (c *colors) White() string { return generate(White) }
 
 // Black high intense color.
 func (c *colors) HiBlack() string { return generate(HiBlack) }
+
 // Red high intense color.
 func (c *colors) HiRed() string { return generate(HiRed) }
+
 // Green high intense color.
 func (c *colors) HiGreen() string { return generate(HiGreen) }
+
 // Yellow high intense color.
 func (c *colors) HiYellow() string { return generate(HiYellow) }
+
 // Blue high intense color.
 func (c *colors) HiBlue() string { return generate(HiBlue) }
+
 // Magenta high intense color.
 func (c *colors) HiMagenta() string { return generate(HiMagenta) }
+
 // Cyan high intense color.
 func (c *colors) HiCyan() string { return generate(HiCyan) }
+
 // White high intense color.
 func (c *colors) HiWhite() string { return generate(HiWhite) }

@@ -54,39 +54,39 @@ func TestColor(t *testing.T) {
 	writer.out = buf
 
 	testList := []struct {
-		text string
+		text  string
 		color int
 	}{
 		{
-			text: "black text",
+			text:  "black text",
 			color: 30,
 		},
 		{
-			text: "red text",
+			text:  "red text",
 			color: Red,
 		},
 		{
-			text: "green text",
+			text:  "green text",
 			color: Green,
 		},
 		{
-			text: "yellow text",
+			text:  "yellow text",
 			color: Yellow,
 		},
 		{
-			text: "blue text",
+			text:  "blue text",
 			color: Blue,
 		},
 		{
-			text: "magenta text",
+			text:  "magenta text",
 			color: Magenta,
 		},
 		{
-			text: "cyan text",
+			text:  "cyan text",
 			color: Cyan,
 		},
 		{
-			text: "white text",
+			text:  "white text",
 			color: White,
 		},
 	}
@@ -115,48 +115,48 @@ func TestWriter_Prefix(t *testing.T) {
 
 	testList := []struct {
 		prefix string
-		text string
-		color func(clog Colors) string
+		text   string
+		color  func(clog Colors) string
 	}{
 		{
 			prefix: "[HIDDEN]",
-			text: "[HIDDEN] black text",
-			color: Colors.Black,
+			text:   "[HIDDEN] black text",
+			color:  Colors.Black,
 		},
 		{
 			prefix: "[ERROR]",
-			text: "[ERROR] error text",
-			color: Colors.Red,
+			text:   "[ERROR] error text",
+			color:  Colors.Red,
 		},
 		{
 			prefix: "[INFO]",
-			text: "[INFO] info text",
-			color: Colors.Yellow,
+			text:   "[INFO] info text",
+			color:  Colors.Yellow,
 		},
 		{
 			prefix: "[WARN]",
-			text: "[WARN] warn text",
-			color: Colors.Green,
+			text:   "[WARN] warn text",
+			color:  Colors.Green,
 		},
 		{
 			prefix: "[DEBUG]",
-			text: "[DEBUG] debug text",
-			color: Colors.Cyan,
+			text:   "[DEBUG] debug text",
+			color:  Colors.Cyan,
 		},
 		{
 			prefix: "[PANIC]",
-			text: "[PANIC] panic text",
-			color: Colors.Blue,
+			text:   "[PANIC] panic text",
+			color:  Colors.Blue,
 		},
 		{
 			prefix: "[OWN]",
-			text: "[OWN] own text",
-			color: Colors.Magenta,
+			text:   "[OWN] own text",
+			color:  Colors.Magenta,
 		},
 		{
 			prefix: "[TEST]",
-			text: "[TEST] white text",
-			color: Colors.White,
+			text:   "[TEST] white text",
+			color:  Colors.White,
 		},
 	}
 
@@ -184,48 +184,48 @@ func TestWriter_Prefix2(t *testing.T) {
 
 	testList := []struct {
 		prefix string
-		text string
-		color func(clog Colors) string
+		text   string
+		color  func(clog Colors) string
 	}{
 		{
 			prefix: "[HIDDEN]",
-			text: "[HIDDEN] black text",
-			color: Colors.HiBlack,
+			text:   "[HIDDEN] black text",
+			color:  Colors.HiBlack,
 		},
 		{
 			prefix: "[ERROR]",
-			text: "[ERROR] error text",
-			color: Colors.HiRed,
+			text:   "[ERROR] error text",
+			color:  Colors.HiRed,
 		},
 		{
 			prefix: "[INFO]",
-			text: "[INFO] info text",
-			color: Colors.HiYellow,
+			text:   "[INFO] info text",
+			color:  Colors.HiYellow,
 		},
 		{
 			prefix: "[WARN]",
-			text: "[WARN] warn text",
-			color: Colors.HiGreen,
+			text:   "[WARN] warn text",
+			color:  Colors.HiGreen,
 		},
 		{
 			prefix: "[DEBUG]",
-			text: "[DEBUG] debug text",
-			color: Colors.HiCyan,
+			text:   "[DEBUG] debug text",
+			color:  Colors.HiCyan,
 		},
 		{
 			prefix: "[PANIC]",
-			text: "[PANIC] panic text",
-			color: Colors.HiBlue,
+			text:   "[PANIC] panic text",
+			color:  Colors.HiBlue,
 		},
 		{
 			prefix: "[OWN]",
-			text: "[OWN] own text",
-			color: Colors.HiMagenta,
+			text:   "[OWN] own text",
+			color:  Colors.HiMagenta,
 		},
 		{
 			prefix: "[TEST]",
-			text: "[TEST] white text",
-			color: Colors.HiWhite,
+			text:   "[TEST] white text",
+			color:  Colors.HiWhite,
 		},
 	}
 
@@ -253,48 +253,48 @@ func TestWriter_Custom(t *testing.T) {
 
 	testList := []struct {
 		prefix string
-		text string
-		color int
+		text   string
+		color  int
 	}{
 		{
 			prefix: "[HIDDEN]",
-			text: "[HIDDEN] black text",
-			color: Black,
+			text:   "[HIDDEN] black text",
+			color:  Black,
 		},
 		{
 			prefix: "[ERROR]",
-			text: "[ERROR] error text",
-			color: Red,
+			text:   "[ERROR] error text",
+			color:  Red,
 		},
 		{
 			prefix: "[INFO]",
-			text: "[INFO] info text",
-			color: Yellow,
+			text:   "[INFO] info text",
+			color:  Yellow,
 		},
 		{
 			prefix: "[WARN]",
-			text: "[WARN] warn text",
-			color: Green,
+			text:   "[WARN] warn text",
+			color:  Green,
 		},
 		{
 			prefix: "[DEBUG]",
-			text: "[DEBUG] debug text",
-			color: Cyan,
+			text:   "[DEBUG] debug text",
+			color:  Cyan,
 		},
 		{
 			prefix: "[PANIC]",
-			text: "[PANIC] panic text",
-			color: Blue,
+			text:   "[PANIC] panic text",
+			color:  Blue,
 		},
 		{
 			prefix: "[OWN]",
-			text: "[OWN] own text",
-			color: Magenta,
+			text:   "[OWN] own text",
+			color:  Magenta,
 		},
 		{
 			prefix: "[TEST]",
-			text: "[TEST] white text",
-			color: White,
+			text:   "[TEST] white text",
+			color:  White,
 		},
 	}
 
@@ -342,20 +342,42 @@ func TestWriter_Custom2(t *testing.T) {
 		t.Errorf("Expecting %s, got '%s'\n", colored, line)
 	}
 
+	prefix := "[TEST]"
 	defer func() {
-		if r := recover(); r == nil {
+		r := recover()
+
+		fmt.Println("WTF 1")
+		if r != fmt.Sprintf("clog: missed configuration for %s", prefix) {
+			t.Error("Must throw missed configuration")
+		}
+
+		if r == nil {
+			t.Errorf("The code did not panic on wrong parameters in Custom()")
+		}
+	}()
+	writer.Custom(prefix)
+}
+
+func TestWriter_Custom3(t *testing.T) {
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	writer := Install()
+	buf := new(bytes.Buffer)
+	writer.out = buf
+
+	prefix := "[TEST]"
+	defer func() {
+		r := recover()
+
+		if !strings.Contains(fmt.Sprintf("%v", r), fmt.Sprintf("clog: wrong configuration for %s", prefix)) {
+			t.Error("Must throw wrong configuration")
+		}
+
+		if r == nil {
 			t.Errorf("The code did not panic on wrong parameters in Custom()")
 		}
 	}()
 
-	writer.Custom("[TEST]")
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic on wrong parameters in Custom()")
-		}
-	}()
-	writer.Custom("[TEST]", "1")
+	writer.Custom(prefix, "1")
 }
 
 func TestWriter_Style(t *testing.T) {
@@ -366,53 +388,53 @@ func TestWriter_Style(t *testing.T) {
 
 	testList := []struct {
 		prefix string
-		text string
-		style int
+		text   string
+		style  int
 	}{
 		{
 			prefix: "[BOLD]",
-			text: "[BOLD] bold text",
-			style: Bold,
+			text:   "[BOLD] bold text",
+			style:  Bold,
 		},
 		{
 			prefix: "[FAINT]",
-			text: "[FAINT] faint text",
-			style: Faint,
+			text:   "[FAINT] faint text",
+			style:  Faint,
 		},
 		{
 			prefix: "[ITALIC]",
-			text: "[ITALIC] italic text",
-			style: Italic,
+			text:   "[ITALIC] italic text",
+			style:  Italic,
 		},
 		{
 			prefix: "[UNDERLINE]",
-			text: "[UNDERLINE] underline text",
-			style: Underline,
+			text:   "[UNDERLINE] underline text",
+			style:  Underline,
 		},
 		{
 			prefix: "[BLINKSLOW]",
-			text: "[BLINKSLOW] blink slow text",
-			style: BlinkSlow,
+			text:   "[BLINKSLOW] blink slow text",
+			style:  BlinkSlow,
 		},
 		{
 			prefix: "[BLINKRAPID]",
-			text: "[BLINKRAPID] blink rapid text",
-			style: BlinkRapid,
+			text:   "[BLINKRAPID] blink rapid text",
+			style:  BlinkRapid,
 		},
 		{
 			prefix: "[REVERSEVIDEO]",
-			text: "[REVERSEVIDEO] reverse video text",
-			style: ReverseVideo,
+			text:   "[REVERSEVIDEO] reverse video text",
+			style:  ReverseVideo,
 		},
 		{
 			prefix: "[CANCEALED]",
-			text: "[CANCEALED] concealed text",
-			style: Concealed,
+			text:   "[CANCEALED] concealed text",
+			style:  Concealed,
 		},
 		{
 			prefix: "[CROSSEDOUT]",
-			text: "[CROSSEDOUT] crossed out text",
-			style: CrossedOut,
+			text:   "[CROSSEDOUT] crossed out text",
+			style:  CrossedOut,
 		},
 	}
 
@@ -455,6 +477,27 @@ func TestWriter_SetOutput(t *testing.T) {
 
 	if line != colored {
 		t.Errorf("Expecting %s, got '%s'\n", colored, line)
+	}
+}
+
+func BenchmarkClog(b *testing.B) {
+	writer := Install()
+	buf := new(bytes.Buffer)
+	writer.out = buf
+
+	message := "benchmark"
+	for i := 0; i < b.N; i++ {
+		log.Print(message)
+	}
+}
+
+func BenchmarkLog(b *testing.B) {
+	buf := new(bytes.Buffer)
+	log.SetOutput(buf)
+
+	message := "benchmark"
+	for i := 0; i < b.N; i++ {
+		log.Print(message)
 	}
 }
 

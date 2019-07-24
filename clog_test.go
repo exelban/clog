@@ -9,6 +9,14 @@ import (
 	"testing"
 )
 
+var messages = [][]byte{
+		[]byte("[TRACE] foo"),
+		[]byte("[DEBUG] foo"),
+		[]byte("[INFO] foo"),
+		[]byte("[WARN] foo"),
+		[]byte("[ERROR] foo"),
+	}
+
 func TestInstall(t *testing.T) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 	writer := Install()
@@ -556,24 +564,43 @@ func TestWriter_SetMinLevel(t *testing.T) {
 	}
 }
 
-func BenchmarkClog(b *testing.B) {
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
+func BenchmarkDiscard(b *testing.B) {
+	b.ReportAllocs()
 
-	message := "benchmark"
 	for i := 0; i < b.N; i++ {
-		log.Print(message)
+		_, _ = ioutil.Discard.Write(messages[i%len(messages)])
+	}
+}
+
+func BenchmarkClogWrite(b *testing.B) {
+	b.ReportAllocs()
+
+	writer := Install()
+	writer.out = ioutil.Discard
+
+	for i := 0; i < b.N; i++ {
+		_, _ = writer.Write(messages[i%len(messages)])
+	}
+}
+
+func BenchmarkClog(b *testing.B) {
+	b.ReportAllocs()
+
+	writer := Install()
+	writer.out = ioutil.Discard
+
+	for i := 0; i < b.N; i++ {
+		log.Print(messages[i%len(messages)])
 	}
 }
 
 func BenchmarkLog(b *testing.B) {
-	buf := new(bytes.Buffer)
-	log.SetOutput(buf)
+	b.ReportAllocs()
 
-	message := "benchmark"
+	log.SetOutput(ioutil.Discard)
+
 	for i := 0; i < b.N; i++ {
-		log.Print(message)
+		log.Print(messages[i%len(messages)])
 	}
 }
 

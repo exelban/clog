@@ -103,17 +103,11 @@ func (w *Writer) Write(b []byte) (int, error) {
 	copy(c, b)
 	var color string
 
-	ws := sync.WaitGroup{}
-	ws.Add(len(w.colors))
-	for p, i := range w.colors {
-		go func(p string, c string) {
-			if bytes.Contains(b, []byte(p)) {
-				color = c
-			}
-			ws.Done()
-		}(p, i)
+	for p, c := range w.colors {
+		if bytes.Contains(b, []byte(p)) {
+			color = c
+		}
 	}
-	ws.Wait()
 
 	if !w.filters.Check(b) {
 		return len(b), nil

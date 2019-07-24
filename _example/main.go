@@ -6,7 +6,7 @@ import (
 )
 
 func main () {
-	w := clog.Install(clog.Cyan)
+	w := clog.Install()
 	filter := &clog.LevelFilter{
 		Levels: []string{"ERROR", "INFO", "WARN", "DEBUG"},
 		MinLevel: "WARN",

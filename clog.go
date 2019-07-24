@@ -10,7 +10,7 @@ Usage
 	)
 
 	func main () {
-		w := clog.Install(clog.Cyan)
+		clog.Install(clog.Cyan)
 
 		log.Print("[ERROR] error text")
 	}
@@ -34,6 +34,8 @@ type Writer struct {
 	colors map[string]string
 	color  string
 
+	filters *LevelFilter
+
 	mu sync.Mutex
 }
 
@@ -55,12 +57,13 @@ const (
 	CrossedOut
 )
 
-// Install creating proxy writer for output and set it for log.
+// Install - Install create proxy writer for output and set it for log.
 func Install(v ...interface{}) *Writer {
 	w := &Writer{
 		out:    os.Stderr,
 		colors: make(map[string]string),
 		color:  generate(v...),
+		filters: &LevelFilter{},
 	}
 	log.SetOutput(w)
 
@@ -72,11 +75,26 @@ func Install(v ...interface{}) *Writer {
 	return w
 }
 
-// SetOutput sets the output destination for the standard logger.
+// SetOutput - sets the output destination for the standard logger.
 func (w *Writer) SetOutput(writer io.Writer) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.out = writer
+}
+
+// SetFilter - allows to set level filter which will be applied to logs.
+func (w *Writer) SetFilters(levelFilter *LevelFilter) {
+	w.mu.Lock()
+	w.filters = levelFilter
+	w.mu.Unlock()
+}
+
+// SetFilter - allows to set level filter which will be applied to logs.
+func (w *Writer) SetMinLevel(min string) {
+	w.mu.Lock()
+	w.filters.MinLevel = min
+	w.filters.init()
+	w.mu.Unlock()
 }
 
 // Write io.Writer implementation.
@@ -97,6 +115,10 @@ func (w *Writer) Write(b []byte) (int, error) {
 	}
 	ws.Wait()
 
+	if !w.filters.Check(b) {
+		return len(b), nil
+	}
+
 	if color == "" {
 		color = w.color
 	}
@@ -113,24 +135,24 @@ func (w *Writer) Write(b []byte) (int, error) {
 	return n, err
 }
 
-// Prefix allow to set specific colors which will be set to if prefix will be find in logging text.
+// Prefix - prefix allow to set specific colors which will be set to if prefix will be find in logging text.
 func (w *Writer) Prefix(prefix string, f func(clog Colors) string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.colors[prefix] = f(&colors{})
 }
 
-// Custom allow to set custom colors for prefix.
+// Custom - allow to set custom colors for prefix.
 // Accept parameters in next configuration: [textColor, backgroundColor, style].
 func (w *Writer) Custom(prefix string, v ...interface{}) {
 	if len(v) == 0 {
-		panic(fmt.Sprintf("clog: missed configuration for %s", prefix))
+		panic(fmt.Sprintf("clog: missed configuration for %s", prefix)) // TODO: remove panic
 	}
 
 	switch v[0].(type) {
 	case int:
 	default:
-		panic(fmt.Sprintf("clog: wrong configuration for %s (%v)", prefix, v))
+		panic(fmt.Sprintf("clog: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
 	}
 
 	w.mu.Lock()
@@ -139,16 +161,18 @@ func (w *Writer) Custom(prefix string, v ...interface{}) {
 	w.colors[prefix] = generate(v...)
 }
 
-// Uninstall set log output to default (os.Stderr).
+// Uninstall - uninstall set log output to default (os.Stderr).
 func (w *Writer) Uninstall() {
 	log.SetOutput(os.Stderr)
 }
 
+// set - set prefix to data with color and style
 func (w *Writer) set(c string) {
 	str := fmt.Sprintf("%s[%sm", escape, c)
 	_, _ = fmt.Fprintf(w.out, str)
 }
 
+// unset - unset prefix from data with color and style
 func (w *Writer) unset() {
 	_, _ = fmt.Fprintf(w.out, "%s[%dm", escape, Reset)
 }

@@ -463,9 +463,15 @@ func TestWriter_Style(t *testing.T) {
 func TestWriter_Uninstall(t *testing.T) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 	writer := Install()
+	buf := new(bytes.Buffer)
+	writer.out = buf
 	writer.Uninstall()
 
 	log.Print("visibility test")
+
+	if buf.Len() != 0 {
+		t.Error("Buffer must be empty")
+	}
 }
 
 func TestWriter_SetOutput(t *testing.T) {
@@ -483,6 +489,70 @@ func TestWriter_SetOutput(t *testing.T) {
 
 	if line != colored {
 		t.Errorf("Expecting %s, got '%s'\n", colored, line)
+	}
+}
+
+func TestWriter_SetFilter(t *testing.T) {
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	writer := Install()
+	buf := new(bytes.Buffer)
+	writer.out = buf
+
+	levelFilter := &LevelFilter{
+		Levels: []string{"TESTTTTT1", "TESTTTTT2", "TESTTTTT3", "TESTTTTT4"},
+		MinLevel: "TESTTTTT2",
+	}
+	writer.SetFilters(levelFilter)
+
+	if writer.filters != levelFilter {
+		t.Errorf("Level fiters are not initialized properly")
+	}
+
+	log.Print("[TESTTTTT1] foo")
+	log.Print("[TESTTTTT2] baz")
+	log.Print("[TESTTTTT3] buzz")
+	log.Print("[TESTTTTT4] bar")
+
+	line := readFromBuffer(buf)
+	if strings.Contains(line, "TESTTTTT1") ||
+		!strings.Contains(line, "TESTTTTT2") ||
+		!strings.Contains(line, "TESTTTTT3") ||
+		!strings.Contains(line, "TESTTTTT4") {
+		t.Errorf("Must be only 3 levels printed, received: %v", line)
+	}
+}
+
+func TestWriter_SetMinLevel(t *testing.T) {
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	writer := Install()
+	buf := new(bytes.Buffer)
+	writer.out = buf
+
+	levelFilter := &LevelFilter{
+		Levels: []string{"DEBUG", "INFO", "WARN", "ERROR"},
+		MinLevel: "INFO",
+	}
+	writer.SetFilters(levelFilter)
+
+	buf = new(bytes.Buffer)
+	writer.out = buf
+	writer.SetMinLevel("ERROR")
+
+	if writer.filters.MinLevel != "ERROR" {
+		t.Errorf("Minimum level not set properly")
+	}
+
+	log.Print("[DEBUG] foo")
+	log.Print("[INFO] baz")
+	log.Print("[WARN] buzz")
+	log.Print("[ERROR] bar")
+
+	line := readFromBuffer(buf)
+	if strings.Contains(line, "DEBUG") ||
+		strings.Contains(line, "INFO") ||
+		strings.Contains(line, "WARN") ||
+		!strings.Contains(line, "ERROR") {
+		t.Errorf("Must be only ERROR levels printed, received: %v", line)
 	}
 }
 

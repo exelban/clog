@@ -71,6 +71,21 @@ func main () {
 }
 ```
 
+## Benchmarks
+
+```sh
+BenchmarkDiscard-4     	100000000	       12.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkClogWrite-4   	 3000000	       448 ns/op	      32 B/op	       2 allocs/op
+BenchmarkClog-4        	 2000000	       825 ns/op	     172 B/op	       3 allocs/op
+BenchmarkLog-4         	 3000000	       568 ns/op	      80 B/op	       2 allocs/op
+```
+
+`BenchmarkDiscard` - writer to empty buf.  
+`BenchmarkClogWrite` - writer to empty buffer by ClogWriter.  
+`BenchmarkClog` - log using log.Print and installed clog.  
+`BenchmarkLog` - log using log.Print (without clog).
+
+
 # What's new
 ## 1.2.0
 - added level filter to log

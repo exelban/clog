@@ -95,7 +95,13 @@ func TestColor(t *testing.T) {
 		color := generate(c.color)
 
 		writer.set(color)
-		writer.out.Write([]byte(c.text))
+		n, err := writer.out.Write([]byte(c.text))
+		if err != nil {
+			t.Errorf("Not expected error '%s'\n", err)
+		}
+		if n != len([]byte(c.text)) {
+			t.Errorf("Writed number must be the same length as text\n")
+		}
 		writer.unset()
 
 		line := readFromBuffer(buf)

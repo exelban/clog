@@ -89,6 +89,8 @@ BenchmarkLog-4         	 3000000	       568 ns/op	      80 B/op	       2 allocs/
 # What's new
 ## 1.2.0
 - added level filter to log
+- added benchmarks
+- removed blocking goroutine
 - moved colors to separate folder
 - small fixes
 

@@ -1,51 +1,71 @@
 package logg
 
 import (
-	"bytes"
+	"github.com/rs/zerolog"
+	"io/ioutil"
 	"log"
-	"strings"
 	"testing"
 )
 
-func TestLevelFilter_Check(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
+var messages = [][]byte{
+	[]byte("[TRACE] foo"),
+	[]byte("[DEBUG] foo"),
+	[]byte("[INFO] foo"),
+	[]byte("[WARN] foo"),
+	[]byte("[ERROR] foo"),
+}
 
-	levelFilter := &LevelFilter{
-		Levels:   []string{"DEBUG", "INFO", "WARN", "ERROR"},
-		MinLevel: "DEBUG",
+func BenchmarkDiscard(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = ioutil.Discard.Write(messages[i%len(messages)])
 	}
-	writer.SetFilters(levelFilter)
+}
 
-	log.Print("[DEBUG] foo")
-	log.Print("[INFO] baz")
-	log.Print("[WARN] buzz")
-	log.Print("[ERROR] bar")
+func BenchmarkLog(b *testing.B) {
+	b.ReportAllocs()
 
-	line := readFromBuffer(buf)
-	if !strings.Contains(line, "DEBUG") ||
-		!strings.Contains(line, "INFO") ||
-		!strings.Contains(line, "WARN") ||
-		!strings.Contains(line, "ERROR") {
-		t.Errorf("Must be all levels printed, received: %v", line)
+	log.SetOutput(ioutil.Discard)
+	for i := 0; i < b.N; i++ {
+		log.Print(messages[i%len(messages)])
 	}
+}
 
-	buf = new(bytes.Buffer)
-	writer.out = buf
-	writer.SetMinLevel("WARN")
+func BenchmarkLoggWrite(b *testing.B) {
+	b.ReportAllocs()
 
-	log.Print("[DEBUG] foo")
-	log.Print("[INFO] baz")
-	log.Print("[WARN] buzz")
-	log.Print("[ERROR] bar")
+	Logger.out = ioutil.Discard
 
-	line = readFromBuffer(buf)
-	if strings.Contains(line, "DEBUG") ||
-		strings.Contains(line, "INFO") ||
-		!strings.Contains(line, "WARN") ||
-		!strings.Contains(line, "ERROR") {
-		t.Errorf("Must be only WARN and ERROR levels printed, received: %v", line)
+	for i := 0; i < b.N; i++ {
+		_, _ = Logger.Write(messages[i%len(messages)])
+	}
+}
+
+func BenchmarkLoggLog(b *testing.B) {
+	b.ReportAllocs()
+
+	Logger.out = ioutil.Discard
+	for i := 0; i < b.N; i++ {
+		log.Print(messages[i%len(messages)])
+	}
+}
+
+func BenchmarkZerologWrite(b *testing.B) {
+	b.ReportAllocs()
+
+	logger := zerolog.New(ioutil.Discard)
+	for i := 0; i < b.N; i++ {
+		_, _ = logger.Write(messages[i%len(messages)])
+	}
+}
+
+func BenchmarkZerologLog(b *testing.B) {
+	b.ReportAllocs()
+
+	logger := zerolog.New(ioutil.Discard)
+	log.SetOutput(logger)
+	for i := 0; i < b.N; i++ {
+		log.Print(messages[i%len(messages)])
 	}
 }

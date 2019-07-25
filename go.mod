@@ -1,3 +1,3 @@
-module clog
+module logg
 
 go 1.12

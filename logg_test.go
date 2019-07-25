@@ -1,4 +1,4 @@
-package clog
+package logg
 
 import (
 	"bytes"
@@ -130,7 +130,7 @@ func TestWriter_Prefix(t *testing.T) {
 	testList := []struct {
 		prefix string
 		text   string
-		color  func(clog Colors) string
+		color  func(logg Colors) string
 	}{
 		{
 			prefix: "[HIDDEN]",
@@ -199,7 +199,7 @@ func TestWriter_Prefix2(t *testing.T) {
 	testList := []struct {
 		prefix string
 		text   string
-		color  func(clog Colors) string
+		color  func(logg Colors) string
 	}{
 		{
 			prefix: "[HIDDEN]",
@@ -361,7 +361,7 @@ func TestWriter_Custom2(t *testing.T) {
 		r := recover()
 
 		fmt.Println("WTF 1")
-		if r != fmt.Sprintf("clog: missed configuration for %s", prefix) {
+		if r != fmt.Sprintf("logg: missed configuration for %s", prefix) {
 			t.Error("Must throw missed configuration")
 		}
 
@@ -382,7 +382,7 @@ func TestWriter_Custom3(t *testing.T) {
 	defer func() {
 		r := recover()
 
-		if !strings.Contains(fmt.Sprintf("%v", r), fmt.Sprintf("clog: wrong configuration for %s", prefix)) {
+		if !strings.Contains(fmt.Sprintf("%v", r), fmt.Sprintf("logg: wrong configuration for %s", prefix)) {
 			t.Error("Must throw wrong configuration")
 		}
 
@@ -572,7 +572,7 @@ func BenchmarkDiscard(b *testing.B) {
 	}
 }
 
-func BenchmarkClogWrite(b *testing.B) {
+func BenchmarkLoggWrite(b *testing.B) {
 	b.ReportAllocs()
 
 	writer := Install()
@@ -583,7 +583,7 @@ func BenchmarkClogWrite(b *testing.B) {
 	}
 }
 
-func BenchmarkClog(b *testing.B) {
+func BenchmarkLogg(b *testing.B) {
 	b.ReportAllocs()
 
 	writer := Install()

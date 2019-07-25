@@ -1,13 +1,13 @@
 package main
 
 import (
-	"clog"
+	"logg"
 	"log"
 )
 
 func main () {
-	w := clog.Install()
-	filter := &clog.LevelFilter{
+	w := logg.Install()
+	filter := &logg.LevelFilter{
 		Levels: []string{"ERROR", "INFO", "WARN", "DEBUG"},
 		MinLevel: "WARN",
 	}
@@ -20,7 +20,7 @@ func main () {
 
 	log.Print("some text")
 
-	w.Custom("[CUSTOM]", clog.HiBlue, clog.Black, clog.Bold)
+	w.Custom("[CUSTOM]", logg.HiBlue, logg.Black, logg.Bold)
 	log.Print("[CUSTOM] custom text")
 
 	w.SetMinLevel("INFO")

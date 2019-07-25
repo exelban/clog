@@ -8,11 +8,11 @@ import (
 // LevelFilter - keeps levels list, minimum level. Most part of this was borrowed from logutils library from hashicorp.
 // https://github.com/hashicorp/logutils
 type LevelFilter struct {
-	Levels []string
+	Levels   []string
 	MinLevel string
 
 	badLevels map[string]struct{}
-	once sync.Once
+	once      sync.Once
 }
 
 // Check - check if string have a minimum level to be write to output.

@@ -14,7 +14,7 @@ func TestLevelFilter_Check(t *testing.T) {
 	writer.out = buf
 
 	levelFilter := &LevelFilter{
-		Levels: []string{"DEBUG", "INFO", "WARN", "ERROR"},
+		Levels:   []string{"DEBUG", "INFO", "WARN", "ERROR"},
 		MinLevel: "DEBUG",
 	}
 	writer.SetFilters(levelFilter)

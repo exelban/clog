@@ -1,5 +1,7 @@
 package logg
 
+import "fmt"
+
 // Base colors
 const (
 	Black int = iota
@@ -23,6 +25,14 @@ const (
 	HiCyan
 	HiWhite
 )
+
+type ColorsManager struct {
+	colors map[string]string
+}
+
+func (cm *ColorsManager) define(m *message) string {
+	return ""
+}
 
 // Base colors
 type Colors interface {
@@ -94,3 +104,27 @@ func (c *colors) HiCyan() string { return generate(HiCyan) }
 
 // White high intense color.
 func (c *colors) HiWhite() string { return generate(HiWhite) }
+
+func generate(v ...interface{}) string {
+	var textBase = 30
+	var backgroundBase = 40
+
+	var color string
+
+	switch len(v) {
+	case 1:
+		text := textBase + v[0].(int)
+		color = fmt.Sprintf("%d;", text)
+	case 2:
+		text := textBase + v[0].(int)
+		background := backgroundBase + v[1].(int)
+		color = fmt.Sprintf("%d;%d;", text, background)
+	case 3:
+		text := textBase + v[0].(int)
+		background := backgroundBase + v[1].(int)
+		style := v[2].(int)
+		color = fmt.Sprintf("%d;%d;%d;", style, text, background)
+	}
+
+	return color
+}

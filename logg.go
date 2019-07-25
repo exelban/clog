@@ -1,193 +1,91 @@
-// Better log experience in golang.
-/*
-Usage
-
-	package main
-
-	import (
-		"github.com/exelban/logg"
-		"log"
-	)
-
-	func main () {
-		logg.Install()
-
-		log.Print("[ERROR] error text")
-	}
-*/
 package logg
 
 import (
-	"bytes"
-	"fmt"
+	"github.com/francoispqt/gojay"
 	"io"
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
-// A Writer represents an active logging object that generates lines of
-// output to an io.Writer. Each logging operation makes a single call to
-// the Writer's Write method.
-type Writer struct {
-	out    io.Writer
-	colors map[string]string
-	color  string
-
-	filters *LevelFilter
-
-	mu sync.Mutex
-}
-
-const escape = "\x1b"
-const textBase = 30
-const backgroundBase = 40
-
-// Base attributes
+// Base format types
 const (
-	Reset int = iota
-	Bold
-	Faint
-	Italic
-	Underline
-	BlinkSlow
-	BlinkRapid
-	ReverseVideo
-	Concealed
-	CrossedOut
+	Pretty int = iota
+	Json
 )
 
-// Install - Install create proxy writer for output and set it for log.
-func Install(v ...interface{}) *Writer {
-	w := &Writer{
-		out:     os.Stderr,
-		colors:  make(map[string]string),
-		color:   generate(v...),
-		filters: &LevelFilter{},
-	}
-	log.SetOutput(w)
+type Logg struct {
+	colors ColorsManager
+	levels LevelsManager
 
-	w.Custom("[ERROR]", Red)
-	w.Custom("[INFO]", HiYellow)
-	w.Custom("[WARN]", HiGreen)
-	w.Custom("[DEBUG]", HiCyan)
+	format int
+	flags  int
 
-	return w
+	out io.Writer
+	mu  sync.Mutex
 }
 
-// SetOutput - sets the output destination for the standard logger.
-func (w *Writer) SetOutput(writer io.Writer) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.out = writer
-}
+var Logger *Logg
 
-// SetFilter - allows to set level filter which will be applied to logs.
-func (w *Writer) SetFilters(levelFilter *LevelFilter) {
-	w.mu.Lock()
-	w.filters = levelFilter
-	w.mu.Unlock()
-}
+func init() {
+	logg := &Logg{
+		colors: ColorsManager{},
+		levels: LevelsManager{
+			List: []string{
+				"DEBUG",
+				"INFO",
+				"WARN",
+				"ERROR",
+			},
+			Min: "INFO",
+		},
+		format: Pretty,
 
-// SetFilter - allows to set level filter which will be applied to logs.
-func (w *Writer) SetMinLevel(min string) {
-	w.mu.Lock()
-	w.filters.MinLevel = min
-	w.filters.init()
-	w.mu.Unlock()
-}
-
-// Write io.Writer implementation.
-func (w *Writer) Write(b []byte) (int, error) {
-	c := make([]byte, len(b))
-	copy(c, b)
-	var color string
-
-	for p, c := range w.colors {
-		if bytes.Contains(b, []byte(p)) {
-			color = c
-		}
+		out: os.Stderr,
 	}
 
-	if !w.filters.Check(b) {
+	log.SetOutput(logg)
+	log.SetFlags(0)
+
+	Logger = logg
+}
+
+func (l *Logg) Write(b []byte) (int, error) {
+	m := &message{
+		data: b,
+		time: time.Now(),
+	}
+	m.level = l.levels.define(m.data)
+
+	if !l.levels.check(m.level) {
 		return len(b), nil
 	}
 
-	if color == "" {
-		color = w.color
+	if l.format == Pretty {
+		timePrefix := time.Now().Format(time.RFC3339)
+		b = append([]byte(timePrefix+" "), b...)
+		return l.out.Write(b)
 	}
 
-	if color == "" {
-		n, err := w.out.Write(c)
-		return n, err
+	b, err := gojay.MarshalJSONObject(m)
+	if err != nil {
+		return len(b), err
 	}
 
-	w.set(color)
-	n, err := w.out.Write(c)
-	w.unset()
+	b = append(b, []byte("\n")...)
 
-	return n, err
+	return l.out.Write(b)
 }
 
-// Prefix - prefix allow to set specific colors which will be set to if prefix will be find in logging text.
-func (w *Writer) Prefix(prefix string, f func(logg Colors) string) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.colors[prefix] = f(&colors{})
+func SetFormat(format int) {
+	Logger.mu.Lock()
+	Logger.format = format
+	Logger.mu.Unlock()
 }
 
-// Custom - allow to set custom colors for prefix.
-// Accept parameters in next configuration: [textColor, backgroundColor, style].
-func (w *Writer) Custom(prefix string, v ...interface{}) {
-	if len(v) == 0 {
-		panic(fmt.Sprintf("logg: missed configuration for %s", prefix)) // TODO: remove panic
-	}
-
-	switch v[0].(type) {
-	case int:
-	default:
-		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
-	}
-
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	w.colors[prefix] = generate(v...)
-}
-
-// Uninstall - uninstall set log output to default (os.Stderr).
-func (w *Writer) Uninstall() {
-	log.SetOutput(os.Stderr)
-}
-
-// set - set prefix to data with color and style
-func (w *Writer) set(c string) {
-	str := fmt.Sprintf("%s[%sm", escape, c)
-	_, _ = fmt.Fprintf(w.out, str)
-}
-
-// unset - unset prefix from data with color and style
-func (w *Writer) unset() {
-	_, _ = fmt.Fprintf(w.out, "%s[%dm", escape, Reset)
-}
-
-func generate(v ...interface{}) string {
-	var color string
-
-	switch len(v) {
-	case 1:
-		text := textBase + v[0].(int)
-		color = fmt.Sprintf("%d;", text)
-	case 2:
-		text := textBase + v[0].(int)
-		background := backgroundBase + v[1].(int)
-		color = fmt.Sprintf("%d;%d;", text, background)
-	case 3:
-		text := textBase + v[0].(int)
-		background := backgroundBase + v[1].(int)
-		style := v[2].(int)
-		color = fmt.Sprintf("%d;%d;%d;", style, text, background)
-	}
-
-	return color
+func SetFlags(flags int) {
+	Logger.mu.Lock()
+	Logger.flags = flags
+	Logger.mu.Unlock()
 }

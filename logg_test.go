@@ -10,12 +10,12 @@ import (
 )
 
 var messages = [][]byte{
-		[]byte("[TRACE] foo"),
-		[]byte("[DEBUG] foo"),
-		[]byte("[INFO] foo"),
-		[]byte("[WARN] foo"),
-		[]byte("[ERROR] foo"),
-	}
+	[]byte("[TRACE] foo"),
+	[]byte("[DEBUG] foo"),
+	[]byte("[INFO] foo"),
+	[]byte("[WARN] foo"),
+	[]byte("[ERROR] foo"),
+}
 
 func TestInstall(t *testing.T) {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
@@ -507,7 +507,7 @@ func TestWriter_SetFilter(t *testing.T) {
 	writer.out = buf
 
 	levelFilter := &LevelFilter{
-		Levels: []string{"TESTTTTT1", "TESTTTTT2", "TESTTTTT3", "TESTTTTT4"},
+		Levels:   []string{"TESTTTTT1", "TESTTTTT2", "TESTTTTT3", "TESTTTTT4"},
 		MinLevel: "TESTTTTT2",
 	}
 	writer.SetFilters(levelFilter)
@@ -537,7 +537,7 @@ func TestWriter_SetMinLevel(t *testing.T) {
 	writer.out = buf
 
 	levelFilter := &LevelFilter{
-		Levels: []string{"DEBUG", "INFO", "WARN", "ERROR"},
+		Levels:   []string{"DEBUG", "INFO", "WARN", "ERROR"},
 		MinLevel: "INFO",
 	}
 	writer.SetFilters(levelFilter)

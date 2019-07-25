@@ -1,14 +1,14 @@
 package main
 
 import (
-	"logg"
 	"log"
+	"logg"
 )
 
-func main () {
+func main() {
 	w := logg.Install()
 	filter := &logg.LevelFilter{
-		Levels: []string{"ERROR", "INFO", "WARN", "DEBUG"},
+		Levels:   []string{"ERROR", "INFO", "WARN", "DEBUG"},
 		MinLevel: "WARN",
 	}
 	w.SetFilters(filter)

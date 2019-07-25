@@ -60,9 +60,9 @@ const (
 // Install - Install create proxy writer for output and set it for log.
 func Install(v ...interface{}) *Writer {
 	w := &Writer{
-		out:    os.Stderr,
-		colors: make(map[string]string),
-		color:  generate(v...),
+		out:     os.Stderr,
+		colors:  make(map[string]string),
+		color:   generate(v...),
 		filters: &LevelFilter{},
 	}
 	log.SetOutput(w)

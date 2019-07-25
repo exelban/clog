@@ -1,21 +1,21 @@
-// Package clog adding colors to your go application logs.
+// Better log experience in golang.
 /*
 Usage
 
 	package main
 
 	import (
-		"github.com/exelban/clog"
+		"github.com/exelban/logg"
 		"log"
 	)
 
 	func main () {
-		clog.Install(clog.Cyan)
+		logg.Install()
 
 		log.Print("[ERROR] error text")
 	}
 */
-package clog
+package logg
 
 import (
 	"bytes"
@@ -130,7 +130,7 @@ func (w *Writer) Write(b []byte) (int, error) {
 }
 
 // Prefix - prefix allow to set specific colors which will be set to if prefix will be find in logging text.
-func (w *Writer) Prefix(prefix string, f func(clog Colors) string) {
+func (w *Writer) Prefix(prefix string, f func(logg Colors) string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.colors[prefix] = f(&colors{})
@@ -140,13 +140,13 @@ func (w *Writer) Prefix(prefix string, f func(clog Colors) string) {
 // Accept parameters in next configuration: [textColor, backgroundColor, style].
 func (w *Writer) Custom(prefix string, v ...interface{}) {
 	if len(v) == 0 {
-		panic(fmt.Sprintf("clog: missed configuration for %s", prefix)) // TODO: remove panic
+		panic(fmt.Sprintf("logg: missed configuration for %s", prefix)) // TODO: remove panic
 	}
 
 	switch v[0].(type) {
 	case int:
 	default:
-		panic(fmt.Sprintf("clog: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
+		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
 	}
 
 	w.mu.Lock()

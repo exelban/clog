@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/francoispqt/gojay"
 	"log"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,6 +20,8 @@ type message struct {
 	flags int
 	file  string
 	line  int
+
+	mu sync.Mutex
 }
 
 func (m *message) MarshalJSONObject(enc *gojay.Encoder) {
@@ -53,4 +57,36 @@ func (m *message) getMessage() string {
 	}
 
 	return mess
+}
+
+func (m *message) fileLine() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+		m.mu.Unlock()
+		var ok bool
+		var file string
+		var line int
+		_, file, line, ok = runtime.Caller(3)
+		if !ok {
+			file = "???"
+			line = 0
+		}
+		m.mu.Lock()
+
+		if m.flags&log.Lshortfile != 0 {
+			short := file
+			for i := len(file) - 1; i > 0; i-- {
+				if file[i] == '/' {
+					short = file[i+1:]
+					break
+				}
+			}
+			file = short
+		}
+
+		m.line = line
+		m.file = file
+	}
 }

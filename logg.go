@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
 	"sync"
 	"time"
 )
@@ -27,14 +26,21 @@ type Logg struct {
 
 	out io.Writer
 	mu  sync.Mutex
+	buf []byte
 }
 
 var Logger *Logg
 
 func init() {
+	c := colors{}
 	logg := &Logg{
 		colors: ColorsManager{
-			list: make(map[string]string),
+			list: map[string]string{
+				"ERROR": c.Red(),
+				"INFO":  c.HiYellow(),
+				"WARN":  c.HiGreen(),
+				"DEBUG": c.HiCyan(),
+			},
 		},
 		levels: LevelsManager{
 			List: []string{
@@ -48,7 +54,7 @@ func init() {
 
 		format: Pretty,
 		flags:  log.Ldate | log.Ltime,
-		color:  false,
+		color:  true,
 
 		out: os.Stderr,
 	}
@@ -57,13 +63,6 @@ func init() {
 	log.SetOutput(logg)
 	log.SetFlags(0)
 
-	if logg.color {
-		logg.colors.CustomColor("[ERROR]", Red)
-		logg.colors.CustomColor("[INFO]", HiYellow)
-		logg.colors.CustomColor("[WARN]", HiGreen)
-		logg.colors.CustomColor("[DEBUG]", HiCyan)
-	}
-
 	Logger = logg
 }
 
@@ -71,57 +70,37 @@ func (l *Logg) Write(b []byte) (int, error) {
 	m := &message{
 		data:  b,
 		time:  time.Now(),
+		level: "",
 		flags: l.flags,
+		file:  "",
+		line:  0,
 	}
-	m.level = l.levels.define(m.data)
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
+	m.fileLine()
+	m.level = l.levels.define(b)
 	if !l.levels.check(m.level) {
 		return len(b), nil
 	}
-	if l.flags&(log.Lshortfile|log.Llongfile) != 0 {
-		var ok bool
-		_, file, line, ok := runtime.Caller(3)
-		if !ok {
-			file = "???"
-			line = 0
-		}
-		m.file = file
-		m.line = line
 
-		if l.flags&log.Lshortfile != 0 {
-			short := m.file
-			for i := len(m.file) - 1; i > 0; i-- {
-				if m.file[i] == '/' {
-					short = m.file[i+1:]
-					break
-				}
-			}
-			m.file = short
-		}
-	}
-
+	l.buf = l.buf[:0]
 	if l.format == Pretty {
-		if l.color {
-			var color = l.colors.define(m)
-			l.set(color)
+		l.formatHeader(m)
+		l.buf = append(l.buf, m.data...)
+	} else if l.format == Json {
+		b, err := gojay.MarshalJSONObject(m)
+		if err != nil {
+			return len(b), err
 		}
-
-		b = append(l.formatHeader(m), b...)
-		n, err := l.out.Write(b)
-		if l.color {
-			l.unset()
-		}
-		return n, err
+		l.buf = append(l.buf, b...)
 	}
 
-	b, err := gojay.MarshalJSONObject(m)
-	if err != nil {
-		return len(b), err
+	if len(l.buf) == 0 || l.buf[len(l.buf)-1] != '\n' {
+		l.buf = append(l.buf, '\n')
 	}
 
-	b = append(b, []byte("\n")...)
-
-	return l.out.Write(b)
+	return l.out.Write(l.buf)
 }
 
 // Cheap integer to fixed-width decimal ASCII. Give a negative width to avoid zero-padding.
@@ -142,9 +121,14 @@ func itoa(buf *[]byte, i int, wid int) {
 }
 
 // formatHeader generates time for message in way as log package generate.
-func (l *Logg) formatHeader(m *message) []byte {
+func (l *Logg) formatHeader(m *message) {
 	t := m.time
-	buf := &[]byte{}
+	buf := &l.buf
+
+	if l.color {
+		m.color = l.colors.define(&m.data)
+		l.buf = append(l.buf, []byte(fmt.Sprintf("%s[%sm", escape, m.color))...)
+	}
 
 	if l.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
 		if l.flags&log.LUTC != 0 {
@@ -179,8 +163,6 @@ func (l *Logg) formatHeader(m *message) []byte {
 		itoa(buf, m.line, -1)
 		*buf = append(*buf, ": "...)
 	}
-
-	return *buf
 }
 
 // SetFormat sets the output format (Pretty or Json) for the logger.
@@ -205,19 +187,27 @@ func SetDebug() {
 }
 
 // SetColor turn on colors for the logger.
-func SetColor(state bool) {
+func SetColor() {
 	Logger.mu.Lock()
-	Logger.color = state
+	Logger.color = true
 	Logger.mu.Unlock()
 }
 
-// set - set prefix to data with color and style
-func (l *Logg) set(c string) {
-	str := fmt.Sprintf("%s[%sm", escape, c)
-	_, _ = fmt.Fprintf(l.out, str)
+// SetLevels - set the levels of logs.
+func SetLevels(list []string) {
+	Logger.mu.Lock()
+	Logger.levels.List = list
+	Logger.mu.Unlock()
 }
 
-// unset - unset prefix from data with color and style
-func (l *Logg) unset() {
-	_, _ = fmt.Fprintf(l.out, "%s[%dm", escape, Reset)
+// SetMinLevel - set the minimum levels of logs.
+func SetMinLevel(minLevel string) {
+	Logger.mu.Lock()
+	Logger.levels.Min = minLevel
+	Logger.mu.Unlock()
+}
+
+// CustomColor - allow to set custom colors for prefix.
+func CustomColor(prefix string, v ...interface{}) {
+	Logger.colors.CustomColor(prefix, v...)
 }

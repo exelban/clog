@@ -53,11 +53,11 @@ type ColorsManager struct {
 	mu   sync.Mutex
 }
 
-func (cm *ColorsManager) define(m *message) string {
+func (cm *ColorsManager) define(b *[]byte) string {
 	var color string
 
 	for p, c := range cm.list {
-		if bytes.Contains(m.data, []byte(p)) {
+		if bytes.Contains(*b, []byte(p)) {
 			color = c
 		}
 	}
@@ -65,7 +65,7 @@ func (cm *ColorsManager) define(m *message) string {
 	return color
 }
 
-// Custom - allow to set custom colors for prefix.
+// CustomColor - allow to set custom colors for prefix.
 // Accept parameters in next configuration: [textColor, backgroundColor, style].
 func (cm *ColorsManager) CustomColor(prefix string, v ...interface{}) {
 	if len(v) == 0 {

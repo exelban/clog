@@ -14,20 +14,6 @@ type LevelsManager struct {
 	once sync.Once
 }
 
-// SetLevels - set the levels of logs.
-func SetLevels(list []string) {
-	Logger.mu.Lock()
-	Logger.levels.List = list
-	Logger.mu.Unlock()
-}
-
-// SetMinLevel - set the minimum levels of logs.
-func SetMinLevel(minLevel string) {
-	Logger.mu.Lock()
-	Logger.levels.Min = minLevel
-	Logger.mu.Unlock()
-}
-
 func (lm *LevelsManager) init() {
 	badLevels := make(map[string]struct{})
 	for _, level := range lm.List {

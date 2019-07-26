@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/francoispqt/gojay"
+	"log"
 	"strings"
 	"time"
 )
@@ -13,12 +14,21 @@ type message struct {
 	time  time.Time
 	level string
 	color string
+
+	flags int
+	file  string
+	line  int
 }
 
 func (m *message) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.TimeKey("time", &m.time, "2006-01-02T15:04:05.000Z")
 	enc.StringKey("level", m.level)
 	enc.StringKey("message", m.getMessage())
+
+	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+		enc.StringKey("file", m.file)
+		enc.IntKey("line", m.line)
+	}
 }
 func (m *message) IsNil() bool {
 	return m == nil

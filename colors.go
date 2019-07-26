@@ -1,6 +1,14 @@
 package logg
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"sync"
+)
+
+const escape = "\x1b"
+const textBase = 30
+const backgroundBase = 40
 
 // Base colors
 const (
@@ -26,12 +34,54 @@ const (
 	HiWhite
 )
 
+// Base attributes
+const (
+	Reset int = iota
+	Bold
+	Faint
+	Italic
+	Underline
+	BlinkSlow
+	BlinkRapid
+	ReverseVideo
+	Concealed
+	CrossedOut
+)
+
 type ColorsManager struct {
-	colors map[string]string
+	list map[string]string
+	mu   sync.Mutex
 }
 
 func (cm *ColorsManager) define(m *message) string {
-	return ""
+	var color string
+
+	for p, c := range cm.list {
+		if bytes.Contains(m.data, []byte(p)) {
+			color = c
+		}
+	}
+
+	return color
+}
+
+// Custom - allow to set custom colors for prefix.
+// Accept parameters in next configuration: [textColor, backgroundColor, style].
+func (cm *ColorsManager) CustomColor(prefix string, v ...interface{}) {
+	if len(v) == 0 {
+		panic(fmt.Sprintf("logg: missed configuration for %s", prefix)) // TODO: remove panic
+	}
+
+	switch v[0].(type) {
+	case int:
+	default:
+		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
+	}
+
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	cm.list[prefix] = generate(v...)
 }
 
 // Base colors

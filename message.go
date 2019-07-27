@@ -68,7 +68,7 @@ func (m *message) fileLine() {
 		var ok bool
 		var file string
 		var line int
-		_, file, line, ok = runtime.Caller(3)
+		_, file, line, ok = runtime.Caller(4)
 		if !ok {
 			file = "???"
 			line = 0

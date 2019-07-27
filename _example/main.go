@@ -7,7 +7,7 @@ import (
 
 func main() {
 	logg.SetFormat(logg.Pretty)
-	//logg.SetDebug()
+	logg.SetDebug()
 	logg.SetColor()
 
 	log.Print("[ERROR] test")

@@ -65,9 +65,9 @@ func main () {
 ### Configuration
 
 | Function | Default | Description |
-| --- | --- | --- | --- | --- |
-| `SetOutput(io.Writer) ` | os.Stderr | Sets the output destination for the standard logger. |
-| `SetFormat(logg.format) ` | Pretty | Sets the output format (`Pretty` or `Json`) for the logger. |
+| --- | --- | --- |
+`SetOutput(io.Writer) ` | os.Stderr | Sets the output destination for the standard logger. |
+`SetFormat(logg.format) ` | Pretty | Sets the output format (`Pretty` or `Json`) for the logger. |
 | `SetFlags(int) ` | log.Ltime | Sets the output flags for the logger. Accept the dafault log flags. |
 | `SetDebug() ` | false | Sets the output flags prepared to debug for the logger. |
 | `SetLevel([]string) ` | `DEBUG, INFO, WARN, ERROR` | Sets the levels of logs. |

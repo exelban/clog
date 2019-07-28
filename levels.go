@@ -5,20 +5,34 @@ import (
 	"sync"
 )
 
-// LevelFilter - keeps levels list, minimum level. Most part of this was borrowed from logutils library from hashicorp.
-// https://github.com/hashicorp/logutils
-type LevelFilter struct {
-	Levels   []string
-	MinLevel string
+// LevelsManager - managing log levels and checking if data can be printed or not.
+type LevelsManager struct {
+	List []string // list of all levels
+	Min  string   // minimal log level
 
-	badLevels map[string]struct{}
-	once      sync.Once
+	bad  map[string]bool
+	once sync.Once
+	mu   sync.Mutex
 }
 
-// Check - check if string have a minimum level to be write to output.
-func (lf *LevelFilter) Check(b []byte) bool {
-	lf.once.Do(lf.init)
+func (lm *LevelsManager) init() {
+	badLevels := make(map[string]bool)
+	for _, level := range lm.List {
+		if level == lm.Min {
+			break
+		}
+		badLevels[level] = true
+	}
+	lm.bad = badLevels
+}
 
+func (lm *LevelsManager) check(level string) bool {
+	lm.once.Do(lm.init)
+	_, ok := lm.bad[level]
+	return !ok
+}
+
+func (lm *LevelsManager) define(b []byte) string {
 	var level string
 	x := bytes.IndexByte(b, '[')
 	if x >= 0 {
@@ -28,18 +42,13 @@ func (lf *LevelFilter) Check(b []byte) bool {
 		}
 	}
 
-	_, ok := lf.badLevels[level]
-	return !ok
-}
-
-// init - init function allows to create list of levels which must be missed.
-func (lf *LevelFilter) init() {
-	badLevels := make(map[string]struct{})
-	for _, level := range lf.Levels {
-		if level == lf.MinLevel {
-			break
+	if level == "" {
+		for _, l := range lm.List {
+			if bytes.Contains(b, []byte(l)) {
+				level = l
+			}
 		}
-		badLevels[level] = struct{}{}
 	}
-	lf.badLevels = badLevels
+
+	return level
 }

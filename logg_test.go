@@ -5,602 +5,295 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
 
-var messages = [][]byte{
-	[]byte("[TRACE] foo"),
-	[]byte("[DEBUG] foo"),
-	[]byte("[INFO] foo"),
-	[]byte("[WARN] foo"),
-	[]byte("[ERROR] foo"),
-}
-
-func TestInstall(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
+func TestLogg(t *testing.T) {
 	buf := new(bytes.Buffer)
-	writer.out = buf
 
-	message := "test install"
-	log.Print(message)
-
-	line := readFromBuffer(buf)
-	colored := fmt.Sprintf("%s", message)
-
-	//fmt.Println("Has: ", []byte(line))
-	//fmt.Println("Want:", []byte(colored))
-
-	if line != colored {
-		t.Errorf("Expecting %s, got '%s'\n", colored, line)
-	}
-}
-
-func TestInstall2(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install(Black, Green)
-	buf := new(bytes.Buffer)
-	writer.out = buf
-	color := generate(Black, Green)
-
-	message := "test install"
-	log.Print(message)
-
-	line := readFromBuffer(buf)
-	colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, message)
-
-	if line != colored {
-		t.Errorf("Expecting %s, got '%s'\n", colored, line)
-	}
-}
-
-func TestColor(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	testList := []struct {
-		text  string
-		color int
-	}{
-		{
-			text:  "black text",
-			color: 30,
-		},
-		{
-			text:  "red text",
-			color: Red,
-		},
-		{
-			text:  "green text",
-			color: Green,
-		},
-		{
-			text:  "yellow text",
-			color: Yellow,
-		},
-		{
-			text:  "blue text",
-			color: Blue,
-		},
-		{
-			text:  "magenta text",
-			color: Magenta,
-		},
-		{
-			text:  "cyan text",
-			color: Cyan,
-		},
-		{
-			text:  "white text",
-			color: White,
-		},
-	}
-
-	for _, c := range testList {
-		color := generate(c.color)
-
-		writer.set(color)
-		n, err := writer.out.Write([]byte(c.text))
-		if err != nil {
-			t.Errorf("Not expected error '%s'\n", err)
-		}
-		if n != len([]byte(c.text)) {
-			t.Errorf("Writed number must be the same length as text\n")
-		}
-		writer.unset()
-
-		line := readFromBuffer(buf)
-		colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, c.text)
-
-		if line != colored {
-			t.Errorf("Expecting '%s', got '%s'\n", colored, line)
-		}
-	}
-}
-
-func TestWriter_Prefix(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	testList := []struct {
+	tests := map[string]struct {
+		data   string
 		prefix string
-		text   string
-		color  func(logg Colors) string
+		style  string
+
+		format format
+		flags  int
+		color  bool
+		error  bool
+
+		expectedData string
+		emptyOutput  bool
 	}{
-		{
-			prefix: "[HIDDEN]",
-			text:   "[HIDDEN] black text",
-			color:  Colors.Black,
+		"empty": {
+			data:         "",
+			expectedData: "",
+			format:       Pretty,
+			color:        true,
 		},
-		{
-			prefix: "[ERROR]",
-			text:   "[ERROR] error text",
-			color:  Colors.Red,
+		"simple text": {
+			data:         "Hello World",
+			expectedData: "Hello World",
+			format:       Pretty,
+			color:        true,
 		},
-		{
-			prefix: "[INFO]",
-			text:   "[INFO] info text",
-			color:  Colors.Yellow,
+		"INFO": {
+			data:         "[INFO] Hello World",
+			expectedData: "[INFO] Hello World",
+			format:       Pretty,
+			color:        true,
 		},
-		{
-			prefix: "[WARN]",
-			text:   "[WARN] warn text",
-			color:  Colors.Green,
+		"DEBUG": {
+			data:        "[DEBUG] min level test",
+			emptyOutput: true,
+			format:      Pretty,
+			color:       true,
 		},
-		{
-			prefix: "[DEBUG]",
-			text:   "[DEBUG] debug text",
-			color:  Colors.Cyan,
+		"ERROR": {
+			data:         "[ERROR] min level test",
+			expectedData: "[ERROR] min level test",
+			format:       Pretty,
+			color:        true,
 		},
-		{
-			prefix: "[PANIC]",
-			text:   "[PANIC] panic text",
-			color:  Colors.Blue,
+		"ERROR_2": {
+			data:         "ERROR min level test",
+			expectedData: "ERROR min level test",
+			format:       Pretty,
+			color:        true,
 		},
-		{
-			prefix: "[OWN]",
-			text:   "[OWN] own text",
-			color:  Colors.Magenta,
+		"empty_json": {
+			data:         "",
+			expectedData: `{"level":"","message":""}`,
+			format:       Json,
+			color:        false,
 		},
-		{
-			prefix: "[TEST]",
-			text:   "[TEST] white text",
-			color:  Colors.White,
+		"simple_json": {
+			data:         "Hello World",
+			expectedData: `{"level":"","message":"Hello World"}`,
+			format:       Json,
+			color:        false,
+		},
+		"INFO_json": {
+			data:         "[INFO] Hello World",
+			expectedData: `{"level":"INFO","message":"Hello World"}`,
+			format:       Json,
+			color:        false,
+		},
+		"DEBUG_json": {
+			data:        "[DEBUG] Hello World",
+			emptyOutput: true,
+			format:      Json,
+			color:       false,
 		},
 	}
 
-	for _, c := range testList {
-		writer.Prefix(c.prefix, c.color)
-		color := c.color(&colors{})
+	SetOutput(buf)
+	SetFlags(0)
 
-		log.Print(c.text)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			SetFormat(tc.format)
+			Logger.color = tc.color
 
-		line := readFromBuffer(buf)
-		colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, c.text)
+			log.Print(tc.data)
 
-		fmt.Println(line)
-		if line != colored {
-			t.Errorf("Expecting %s, got '%s'\n", colored, line)
-		}
+			b := []byte(tc.data)
+			expectedOutput := tc.expectedData
+			if tc.color {
+				expectedOutput = fmt.Sprintf("\x1b[%sm%s", Logger.colors.define(&b), tc.expectedData)
+			}
+			output := readFromBuffer(buf)
+
+			//fmt.Println(Logger.buf, []byte(output), []byte(expectedOutput))
+
+			if !tc.emptyOutput && output != expectedOutput {
+				t.Errorf("expected: %s, writed: %s", expectedOutput, output)
+			} else if tc.emptyOutput && len([]byte(output)) != 0 {
+				t.Errorf("expected empty output, writed: %s", output)
+			}
+		})
+	}
+
+	SetOutput(os.Stderr)
+	SetFlags(log.Ldate | log.Ltime)
+	SetFormat(Pretty)
+	Logger.color = true
+}
+
+func TestLogg_Write(t *testing.T) {
+	tests := map[string]struct {
+		data   []byte
+		time   bool
+		prefix bool
+	}{
+		"empty": {
+			data:   []byte(""),
+			time:   true,
+			prefix: false,
+		},
+		"1": {
+			data:   []byte("1"),
+			time:   true,
+			prefix: false,
+		},
+		"zero": {
+			data:   []byte("zero"),
+			time:   true,
+			prefix: false,
+		},
+		"info": {
+			data:   []byte("[INFO] Hello world"),
+			time:   true,
+			prefix: true,
+		},
+		"error": {
+			data:   []byte("[ERROR] Hello world"),
+			time:   true,
+			prefix: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			n, err := Logger.Write(tc.data)
+			if err != nil {
+				t.Error(err)
+			}
+
+			expectedBytes := len(tc.data)
+			if tc.time {
+				expectedBytes += 24
+			}
+			if tc.prefix {
+				expectedBytes += 3
+			}
+
+			if expectedBytes != n {
+				t.Errorf("expected %d bytes, writed: %d", expectedBytes, n)
+			}
+		})
 	}
 }
 
-func TestWriter_Prefix2(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	testList := []struct {
+func TestCustomColor(t *testing.T) {
+	tests := map[string]struct {
 		prefix string
-		text   string
-		color  func(logg Colors) string
-	}{
-		{
-			prefix: "[HIDDEN]",
-			text:   "[HIDDEN] black text",
-			color:  Colors.HiBlack,
-		},
-		{
-			prefix: "[ERROR]",
-			text:   "[ERROR] error text",
-			color:  Colors.HiRed,
-		},
-		{
-			prefix: "[INFO]",
-			text:   "[INFO] info text",
-			color:  Colors.HiYellow,
-		},
-		{
-			prefix: "[WARN]",
-			text:   "[WARN] warn text",
-			color:  Colors.HiGreen,
-		},
-		{
-			prefix: "[DEBUG]",
-			text:   "[DEBUG] debug text",
-			color:  Colors.HiCyan,
-		},
-		{
-			prefix: "[PANIC]",
-			text:   "[PANIC] panic text",
-			color:  Colors.HiBlue,
-		},
-		{
-			prefix: "[OWN]",
-			text:   "[OWN] own text",
-			color:  Colors.HiMagenta,
-		},
-		{
-			prefix: "[TEST]",
-			text:   "[TEST] white text",
-			color:  Colors.HiWhite,
-		},
-	}
-
-	for _, c := range testList {
-		writer.Prefix(c.prefix, c.color)
-		color := c.color(&colors{})
-
-		log.Print(c.text)
-
-		line := readFromBuffer(buf)
-		colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, c.text)
-
-		fmt.Println(line)
-		if line != colored {
-			t.Errorf("Expecting %s, got '%s'\n", colored, line)
-		}
-	}
-}
-
-func TestWriter_Custom(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	testList := []struct {
-		prefix string
-		text   string
 		color  int
 	}{
-		{
+		"HIDDEN": {
 			prefix: "[HIDDEN]",
-			text:   "[HIDDEN] black text",
 			color:  Black,
 		},
-		{
+		"ERROR": {
 			prefix: "[ERROR]",
-			text:   "[ERROR] error text",
 			color:  Red,
 		},
-		{
+		"INFO": {
 			prefix: "[INFO]",
-			text:   "[INFO] info text",
 			color:  Yellow,
 		},
-		{
+		"WARN": {
 			prefix: "[WARN]",
-			text:   "[WARN] warn text",
 			color:  Green,
 		},
-		{
+		"DEBUG": {
 			prefix: "[DEBUG]",
-			text:   "[DEBUG] debug text",
 			color:  Cyan,
 		},
-		{
+		"PANIC": {
 			prefix: "[PANIC]",
-			text:   "[PANIC] panic text",
 			color:  Blue,
 		},
-		{
+		"OWN": {
 			prefix: "[OWN]",
-			text:   "[OWN] own text",
 			color:  Magenta,
 		},
-		{
+		"TEST": {
 			prefix: "[TEST]",
-			text:   "[TEST] white text",
 			color:  White,
 		},
 	}
 
-	for _, c := range testList {
-		writer.Custom(c.prefix, c.color)
-		color := generate(c.color)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			CustomColor(tc.prefix, tc.color)
 
-		log.Print(c.text)
-
-		line := readFromBuffer(buf)
-		colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, c.text)
-
-		fmt.Println(line)
-		if line != colored {
-			t.Errorf("Expecting %s, got '%s'\n", colored, line)
-		}
+			if Logger.colors.list[tc.prefix] == "" {
+				t.Errorf("color not find: expected %v, received: %v", tc.prefix, Logger.colors.list[tc.prefix])
+			}
+		})
 	}
 }
 
-func TestWriter_Custom2(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
+func TestSetDebug(t *testing.T) {
+	if Logger.flags != log.Ldate|log.Ltime {
+		t.Errorf("default flags must be %v, not: %v", log.Ldate|log.Ltime, Logger.flags)
+	}
+
+	SetDebug()
+
+	if Logger.flags != log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile {
+		t.Errorf("flags must be %v, not: %v", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile, Logger.flags)
+	}
+}
+
+func TestSetFormat(t *testing.T) {
+	if Logger.format != Pretty {
+		t.Errorf("default format must be %v, not: %v", Pretty, Logger.format)
+	}
+
+	SetFormat(Json)
+
+	if Logger.format != Json {
+		t.Errorf("format must be %v, not: %v", Json, Logger.format)
+	}
+}
+
+func TestSetFlags(t *testing.T) {
+	SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+	if Logger.flags != log.Ldate|log.Ltime|log.Lmicroseconds {
+		t.Errorf("flags must be %v, not: %v", log.Ldate|log.Ltime|log.Lmicroseconds, Logger.flags)
+	}
+}
+
+func TestSetLevels(t *testing.T) {
+	defaultLevelsList := []string{"DEBUG", "INFO", "WARN", "ERROR"}
+
+	if !reflect.DeepEqual(defaultLevelsList, Logger.levels.List) {
+		t.Errorf("default level must be: %v, not: %v", defaultLevelsList, Logger.levels.List)
+	}
+
+	SetLevels([]string{})
+	if len(Logger.levels.List) != 0 {
+		t.Errorf("level must empty, not: %v", Logger.levels.List)
+	}
+}
+
+func TestSetMinLevel(t *testing.T) {
+	defaultMinLevel := "INFO"
+
+	if defaultMinLevel != Logger.levels.Min {
+		t.Errorf("default min level must be: %v, not: %v", defaultMinLevel, Logger.levels.List)
+	}
+
+	SetMinLevel("DEBUG")
+	if Logger.levels.Min != "DEBUG" {
+		t.Errorf("level must %s, not: %v", defaultMinLevel, Logger.levels.Min)
+	}
+}
+
+func TestSetOutput(t *testing.T) {
 	buf := new(bytes.Buffer)
-	writer.out = buf
 
-	writer.Custom("[TEST]", Red, Blue)
-	color := generate(Red, Blue)
-
-	message := "[TEST] test custom with two parameters"
-	log.Print(message)
-
-	line := readFromBuffer(buf)
-	colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, message)
-
-	writer.Custom("[TEST]", Red, Blue, Green)
-	color = generate(Red, Blue, Green)
-
-	message = "[TEST] test custom with all parameters"
-	log.Print(message)
-
-	line = readFromBuffer(buf)
-	colored = fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, message)
-
-	if line != colored {
-		t.Errorf("Expecting %s, got '%s'\n", colored, line)
+	if Logger.out != os.Stderr {
+		t.Error("default output must be os.Stderr")
 	}
 
-	prefix := "[TEST]"
-	defer func() {
-		r := recover()
-
-		fmt.Println("WTF 1")
-		if r != fmt.Sprintf("logg: missed configuration for %s", prefix) {
-			t.Error("Must throw missed configuration")
-		}
-
-		if r == nil {
-			t.Errorf("The code did not panic on wrong parameters in Custom()")
-		}
-	}()
-	writer.Custom(prefix)
-}
-
-func TestWriter_Custom3(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	prefix := "[TEST]"
-	defer func() {
-		r := recover()
-
-		if !strings.Contains(fmt.Sprintf("%v", r), fmt.Sprintf("logg: wrong configuration for %s", prefix)) {
-			t.Error("Must throw wrong configuration")
-		}
-
-		if r == nil {
-			t.Errorf("The code did not panic on wrong parameters in Custom()")
-		}
-	}()
-
-	writer.Custom(prefix, "1")
-}
-
-func TestWriter_Style(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	testList := []struct {
-		prefix string
-		text   string
-		style  int
-	}{
-		{
-			prefix: "[BOLD]",
-			text:   "[BOLD] bold text",
-			style:  Bold,
-		},
-		{
-			prefix: "[FAINT]",
-			text:   "[FAINT] faint text",
-			style:  Faint,
-		},
-		{
-			prefix: "[ITALIC]",
-			text:   "[ITALIC] italic text",
-			style:  Italic,
-		},
-		{
-			prefix: "[UNDERLINE]",
-			text:   "[UNDERLINE] underline text",
-			style:  Underline,
-		},
-		{
-			prefix: "[BLINKSLOW]",
-			text:   "[BLINKSLOW] blink slow text",
-			style:  BlinkSlow,
-		},
-		{
-			prefix: "[BLINKRAPID]",
-			text:   "[BLINKRAPID] blink rapid text",
-			style:  BlinkRapid,
-		},
-		{
-			prefix: "[REVERSEVIDEO]",
-			text:   "[REVERSEVIDEO] reverse video text",
-			style:  ReverseVideo,
-		},
-		{
-			prefix: "[CANCEALED]",
-			text:   "[CANCEALED] concealed text",
-			style:  Concealed,
-		},
-		{
-			prefix: "[CROSSEDOUT]",
-			text:   "[CROSSEDOUT] crossed out text",
-			style:  CrossedOut,
-		},
-	}
-
-	for _, c := range testList {
-		writer.Custom(c.prefix, HiCyan, Black, c.style)
-		color := generate(HiCyan, Black, c.style)
-
-		log.Print(c.text)
-
-		line := readFromBuffer(buf)
-		colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, c.text)
-
-		fmt.Println(line)
-		if line != colored {
-			t.Errorf("Expecting %s, got '%s'\n", colored, line)
-		}
-	}
-}
-
-func TestWriter_Uninstall(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-	writer.Uninstall()
-
-	log.Print("visibility test")
-
-	if buf.Len() != 0 {
-		t.Error("Buffer must be empty")
-	}
-}
-
-func TestWriter_SetOutput(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install(Black, Green)
-	buf := new(bytes.Buffer)
-	writer.SetOutput(buf)
-	color := generate(Black, Green)
-
-	message := "test install"
-	log.Print(message)
-
-	line := readFromBuffer(buf)
-	colored := fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, message)
-
-	if line != colored {
-		t.Errorf("Expecting %s, got '%s'\n", colored, line)
-	}
-}
-
-func TestWriter_SetFilter(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	levelFilter := &LevelFilter{
-		Levels:   []string{"TESTTTTT1", "TESTTTTT2", "TESTTTTT3", "TESTTTTT4"},
-		MinLevel: "TESTTTTT2",
-	}
-	writer.SetFilters(levelFilter)
-
-	if writer.filters != levelFilter {
-		t.Errorf("Level fiters are not initialized properly")
-	}
-
-	log.Print("[TESTTTTT1] foo")
-	log.Print("[TESTTTTT2] baz")
-	log.Print("[TESTTTTT3] buzz")
-	log.Print("[TESTTTTT4] bar")
-
-	line := readFromBuffer(buf)
-	if strings.Contains(line, "TESTTTTT1") ||
-		!strings.Contains(line, "TESTTTTT2") ||
-		!strings.Contains(line, "TESTTTTT3") ||
-		!strings.Contains(line, "TESTTTTT4") {
-		t.Errorf("Must be only 3 levels printed, received: %v", line)
-	}
-}
-
-func TestWriter_SetMinLevel(t *testing.T) {
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-	writer := Install()
-	buf := new(bytes.Buffer)
-	writer.out = buf
-
-	levelFilter := &LevelFilter{
-		Levels:   []string{"DEBUG", "INFO", "WARN", "ERROR"},
-		MinLevel: "INFO",
-	}
-	writer.SetFilters(levelFilter)
-
-	buf = new(bytes.Buffer)
-	writer.out = buf
-	writer.SetMinLevel("ERROR")
-
-	if writer.filters.MinLevel != "ERROR" {
-		t.Errorf("Minimum level not set properly")
-	}
-
-	log.Print("[DEBUG] foo")
-	log.Print("[INFO] baz")
-	log.Print("[WARN] buzz")
-	log.Print("[ERROR] bar")
-
-	line := readFromBuffer(buf)
-	if strings.Contains(line, "DEBUG") ||
-		strings.Contains(line, "INFO") ||
-		strings.Contains(line, "WARN") ||
-		!strings.Contains(line, "ERROR") {
-		t.Errorf("Must be only ERROR levels printed, received: %v", line)
-	}
-}
-
-func BenchmarkDiscard(b *testing.B) {
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		_, _ = ioutil.Discard.Write(messages[i%len(messages)])
-	}
-}
-
-func BenchmarkLoggWrite(b *testing.B) {
-	b.ReportAllocs()
-
-	writer := Install()
-	writer.out = ioutil.Discard
-
-	for i := 0; i < b.N; i++ {
-		_, _ = writer.Write(messages[i%len(messages)])
-	}
-}
-
-func BenchmarkLogg(b *testing.B) {
-	b.ReportAllocs()
-
-	writer := Install()
-	writer.out = ioutil.Discard
-
-	for i := 0; i < b.N; i++ {
-		log.Print(messages[i%len(messages)])
-	}
-}
-
-func BenchmarkLog(b *testing.B) {
-	b.ReportAllocs()
-
-	log.SetOutput(ioutil.Discard)
-
-	for i := 0; i < b.N; i++ {
-		log.Print(messages[i%len(messages)])
+	SetOutput(buf)
+	if Logger.out != buf {
+		t.Error("output must be buf")
 	}
 }
 

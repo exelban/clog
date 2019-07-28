@@ -2,34 +2,33 @@
 [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/exelban/logg)
 [![codecov](https://codecov.io/gh/exelban/logg/branch/master/graph/badge.svg)](https://codecov.io/gh/exelban/logg)
 
-![](https://s3.eu-central-1.amazonaws.com/serhiy/Github_repo/clog/Zrzut+ekranu+2018-10-16+o+18.52.26.png)  
-Color logs for your go application.
+![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-1.png)  
+![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-2.png)  
+Better log experience in golang.
 
-# Installation
+## Installation
 ```bash
 go get github.com/exelban/logg
 ```
 
-# Usage
-## Example
+## Usage
 
-### Simple usage
+### Example
+#### Simple usage
 ```golang
 package main
 
 import (
-	"github.com/exelban/logg"
+	_ "github.com/exelban/logg"
 	"log"
 )
 
 func main () {
-	logg.Install()
-	
 	log.Print("[ERROR] error text")
 }
 ```
 
-### Custom level
+#### Json logs
 ```golang
 package main
 
@@ -39,15 +38,13 @@ import (
 )
 
 func main () {
-	w := logg.Install(logg.Cyan)
-  
-	w.Custom("[CUSTOM]", logg.HiBlue, logg.Black, logg.Bold)
+	logg.SetFormat(logg.Json)
 	
-	log.Print("[CUSTOM] custom text")
+	log.Print("message")
 }
 ```
 
-### Level filter usage
+#### Level filter usage
 ```golang
 package main
 
@@ -57,56 +54,41 @@ import (
 )
 
 func main () {
-	w := logg.Install()
-	filter := &logg.LevelFilter{
-		Levels: []string{"DEBUG", "INFO", "WARN", "ERROR"},
-		MinLevel: "WARN",
-	}
-	w.SetFilters(filter)
+	logg.SetMinLevel("INFO")
 	
 	log.Print("[DEBUG] will not be printed")
-	log.Print("[INFO] will not be printed")
-	log.Print("[WARN] will not printed")
-	log.Print("[ERROR] will not printed")
+	log.Print("[INFO] will be printed")
+	log.Print("[WARN] will be printed")
+	log.Print("[ERROR] will be printed")
 }
 ```
+
+### Configuration
+
+| Function | Default | Description |
+| --- | --- | --- |
+`SetOutput(io.Writer) ` | os.Stderr | Sets the output destination for the standard logger. |
+`SetFormat(logg.format) ` | Pretty | Sets the output format (`Pretty` or `Json`) for the logger. |
+| `SetFlags(int) ` | log.Ltime | Sets the output flags for the logger. Accept the dafault log flags. |
+| `SetDebug() ` | false | Sets the output flags prepared to debug for the logger. |
+| `SetLevel([]string) ` | `DEBUG, INFO, WARN, ERROR` | Sets the levels of logs. |
+| `SetMinLevel(string) ` | `INFO` | Set the minimum levels of logs. |
+| `CustomColor(string, ...interface) ` | | Allow to set custom colors for prefix |
 
 ## Benchmarks
 
 ```sh
-BenchmarkDiscard-4     	100000000	       12.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLoggWrite-4   	 3000000	       448 ns/op	      32 B/op	       2 allocs/op
-BenchmarkLogg-4        	 2000000	       825 ns/op	     172 B/op	       3 allocs/op
-BenchmarkLog-4         	 3000000	       568 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLog-4             	 2000000	       775 ns/op	     272 B/op	       2 allocs/op
+BenchmarkLoggWrite-4       	 1000000	      1032 ns/op	     160 B/op	       4 allocs/op
+BenchmarkLoggLogPretty-4   	 2000000	       728 ns/op	     272 B/op	       2 allocs/op
+BenchmarkLoggLogJson-4     	 2000000	       726 ns/op	     272 B/op	       2 allocs/op
 ```
 
-`BenchmarkDiscard` - writer to empty buf.  
+`BenchmarkLog` - log.Print without installed Logg.  
 `BenchmarkLoggWrite` - writer to empty buffer by LoggWriter.  
-`BenchmarkLogg` - log using log.Print and installed logg.  
-`BenchmarkLog` - log using log.Print (without logg).
+`BenchmarkLoggLogPretty` - log.Print in pretty format.  
+`BenchmarkLoggLogJson` - log.Print in JSON format.
 
 
-# What's new
-## 2.0.0
-- renamed to logg
-
-## 1.2.0
-- added level filter to log
-- added benchmarks
-- removed blocking goroutine
-- moved colors to separate folder
-- small fixes
-
-## 1.0.2
-- added one more example
-- added benchmark if someone want to compare logging to log package
-- added one more test
-
-## 1.0.1
-- added preinstalled colors for [ERROR], [INFO], [WARN] and [DEBUG]
-
-## 1.0.0
-- first release
-
-# Licence
+## Licence
 [MIT License](https://github.com/exelban/logg/blob/master/LICENSE)

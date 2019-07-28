@@ -25,7 +25,9 @@ type message struct {
 }
 
 func (m *message) MarshalJSONObject(enc *gojay.Encoder) {
-	enc.TimeKey("time", &m.time, "2006-01-02T15:04:05.000Z")
+	if m.flags != 0 {
+		enc.TimeKey("time", &m.time, "2006-01-02T15:04:05.000Z")
+	}
 	enc.StringKey("level", m.level)
 	enc.StringKey("message", m.getMessage())
 
@@ -59,7 +61,7 @@ func (m *message) getMessage() string {
 	return mess
 }
 
-func (m *message) fileLine() {
+func (m *message) fileLine(calldepth int) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -68,7 +70,7 @@ func (m *message) fileLine() {
 		var ok bool
 		var file string
 		var line int
-		_, file, line, ok = runtime.Caller(4)
+		_, file, line, ok = runtime.Caller(calldepth)
 		if !ok {
 			file = "???"
 			line = 0

@@ -69,13 +69,13 @@ func (cm *ColorsManager) define(b *[]byte) string {
 // Accept parameters in next configuration: [textColor, backgroundColor, style].
 func (cm *ColorsManager) CustomColor(prefix string, v ...interface{}) {
 	if len(v) == 0 {
-		panic(fmt.Sprintf("logg: missed configuration for %s", prefix)) // TODO: remove panic
+		panic(fmt.Sprintf("logg: missed configuration for %s", prefix))
 	}
 
 	switch v[0].(type) {
 	case int:
 	default:
-		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v)) // TODO: remove panic
+		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v))
 	}
 
 	cm.mu.Lock()

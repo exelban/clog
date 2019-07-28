@@ -1,7 +1,6 @@
 package logg
 
 import (
-	"github.com/rs/zerolog"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -59,27 +58,27 @@ func BenchmarkLoggLogJson(b *testing.B) {
 	})
 }
 
-func BenchmarkZerologWrite(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	logger := zerolog.New(ioutil.Discard)
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			_, _ = logger.Write(testMessage)
-		}
-	})
-}
-
-func BenchmarkZerologLog(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	logger := zerolog.New(ioutil.Discard)
-	log.SetOutput(logger)
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			log.Print(testMessage)
-		}
-	})
-}
+//func BenchmarkZerologWrite(b *testing.B) {
+//	b.ReportAllocs()
+//	b.ResetTimer()
+//
+//	logger := zerolog.New(ioutil.Discard)
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			_, _ = logger.Write(testMessage)
+//		}
+//	})
+//}
+//
+//func BenchmarkZerologLog(b *testing.B) {
+//	b.ReportAllocs()
+//	b.ResetTimer()
+//
+//	logger := zerolog.New(ioutil.Discard)
+//	log.SetOutput(logger)
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			log.Print(testMessage)
+//		}
+//	})
+//}

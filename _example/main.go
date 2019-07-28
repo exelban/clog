@@ -11,10 +11,8 @@ func main() {
 
 	log.Print("[ERROR] test")
 	log.Print("[INFO] test")
+	log.Print("[DEBUG] test")
+	log.Print("[WARN] test")
 
-	logg.CustomColor("ERROR", logg.Green)
-	log.Print("[ERROR] test")
-
-	log.Print("WARN test")
 	log.Print("test")
 }

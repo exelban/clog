@@ -1,3 +1,16 @@
+// Better log experience in golang.
+/*
+Usage
+
+	package main
+	import (
+		_ "github.com/exelban/logg"
+		"log"
+	)
+	func main () {
+		log.Print("[ERROR] error text")
+	}
+*/
 package logg
 
 import (
@@ -11,24 +24,30 @@ import (
 )
 
 // Base format types
+type format int
+
 const (
-	Pretty int = iota
+	Pretty format = iota
 	Json
 )
 
+// A Logg represents an active logging object that generates lines of
+// output to an io.Writer. Each logging operation makes a single call to
+// the Logg's Write method.
 type Logg struct {
 	colors ColorsManager
 	levels LevelsManager
 
-	format int
-	flags  int
-	color  bool
+	format format // pretty or Json
+	flags  int    // time flags
+	color  bool   // if colors are enabled or not
 
 	out io.Writer
 	mu  sync.Mutex
 	buf []byte
 }
 
+// Logger - is a global object which keep Logg configuration.
 var Logger *Logg
 
 func init() {
@@ -66,6 +85,10 @@ func init() {
 	Logger = logg
 }
 
+// Write writes len(p) bytes from p to the underlying data stream.
+// It returns the number of bytes written from p (0 <= n <= len(p))
+// and any error encountered that caused the write to stop early.
+// Write must return a non-nil error if it returns n < len(p).
 func (l *Logg) Write(b []byte) (int, error) {
 	m := &message{
 		data:  b,
@@ -78,7 +101,7 @@ func (l *Logg) Write(b []byte) (int, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	m.fileLine()
+	m.fileLine(4)
 	m.level = l.levels.define(b)
 	if !l.levels.check(m.level) {
 		return len(b), nil
@@ -165,8 +188,15 @@ func (l *Logg) formatHeader(m *message) {
 	}
 }
 
+// SetOutput - sets the output destination for the standard logger.
+func SetOutput(writer io.Writer) {
+	Logger.mu.Lock()
+	Logger.out = writer
+	Logger.mu.Unlock()
+}
+
 // SetFormat sets the output format (Pretty or Json) for the logger.
-func SetFormat(format int) {
+func SetFormat(format format) {
 	Logger.mu.Lock()
 	Logger.format = format
 	Logger.mu.Unlock()
@@ -186,25 +216,18 @@ func SetDebug() {
 	Logger.mu.Unlock()
 }
 
-// SetColor turn on colors for the logger.
-func SetColor() {
-	Logger.mu.Lock()
-	Logger.color = true
-	Logger.mu.Unlock()
-}
-
-// SetLevels - set the levels of logs.
+// SetLevels - sets the levels of logs.
 func SetLevels(list []string) {
-	Logger.mu.Lock()
+	Logger.levels.mu.Lock()
 	Logger.levels.List = list
-	Logger.mu.Unlock()
+	Logger.levels.mu.Unlock()
 }
 
 // SetMinLevel - set the minimum levels of logs.
 func SetMinLevel(minLevel string) {
-	Logger.mu.Lock()
+	Logger.levels.mu.Lock()
 	Logger.levels.Min = minLevel
-	Logger.mu.Unlock()
+	Logger.levels.mu.Unlock()
 }
 
 // CustomColor - allow to set custom colors for prefix.

@@ -10,17 +10,18 @@ type LevelsManager struct {
 	List []string // list of all levels
 	Min  string   // minimal log level
 
-	bad  map[string]struct{}
+	bad  map[string]bool
 	once sync.Once
+	mu   sync.Mutex
 }
 
 func (lm *LevelsManager) init() {
-	badLevels := make(map[string]struct{})
+	badLevels := make(map[string]bool)
 	for _, level := range lm.List {
 		if level == lm.Min {
 			break
 		}
-		badLevels[level] = struct{}{}
+		badLevels[level] = true
 	}
 	lm.bad = badLevels
 }

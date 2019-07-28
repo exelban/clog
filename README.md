@@ -2,8 +2,9 @@
 [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/exelban/logg)
 [![codecov](https://codecov.io/gh/exelban/logg/branch/master/graph/badge.svg)](https://codecov.io/gh/exelban/logg)
 
-![](https://s3.eu-central-1.amazonaws.com/serhiy/Github_repo/clog/Zrzut+ekranu+2018-10-16+o+18.52.26.png)  
-Color logs for your go application.
+![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-1.png)  
+![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-2.png)  
+Better log experience in golang.
 
 ## Installation
 ```bash

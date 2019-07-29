@@ -1,4 +1,4 @@
-module logg
+module github/exelban/logg
 
 go 1.12
 

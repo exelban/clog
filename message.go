@@ -2,8 +2,8 @@ package logg
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/francoispqt/gojay"
 	"log"
 	"runtime"
 	"strings"
@@ -24,20 +24,28 @@ type message struct {
 	mu sync.Mutex
 }
 
-func (m *message) MarshalJSONObject(enc *gojay.Encoder) {
-	if m.flags != 0 {
-		enc.TimeKey("time", &m.time, "2006-01-02T15:04:05.000Z")
+func (m *message) MarshalJSON() ([]byte, error) {
+	jsonObject := &struct {
+		Time    *time.Time `json:"time,omitempty"`
+		Level   string     `json:"level,omitempty"`
+		Message string     `json:"message"`
+		File    string     `json:"file,omitempty"`
+		Line    int        `json:"line,omitempty"`
+	}{
+		Level:   m.level,
+		Message: m.getMessage(),
 	}
-	enc.StringKey("level", m.level)
-	enc.StringKey("message", m.getMessage())
 
-	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
-		enc.StringKey("file", m.file)
-		enc.IntKey("line", m.line)
+	if m.flags != 0 {
+		t := m.time.UTC()
+		jsonObject.Time = &t
 	}
-}
-func (m *message) IsNil() bool {
-	return m == nil
+	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+		jsonObject.File = m.file
+		jsonObject.Line = m.line
+	}
+
+	return json.Marshal(jsonObject)
 }
 
 func (m *message) getMessage() string {

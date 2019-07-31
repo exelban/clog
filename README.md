@@ -78,10 +78,10 @@ func main () {
 ## Benchmarks
 
 ```sh
-BenchmarkLog-4             	 2000000	       775 ns/op	     272 B/op	       2 allocs/op
-BenchmarkLoggWrite-4       	 1000000	      1032 ns/op	     160 B/op	       4 allocs/op
-BenchmarkLoggLogPretty-4   	 2000000	       728 ns/op	     272 B/op	       2 allocs/op
-BenchmarkLoggLogJson-4     	 2000000	       726 ns/op	     272 B/op	       2 allocs/op
+BenchmarkLog-8             	 3000000	       506 ns/op	     272 B/op	       2 allocs/op
+BenchmarkLoggWrite-8       	 2000000	       914 ns/op	     160 B/op	       4 allocs/op
+BenchmarkLoggLogPretty-8   	 3000000	       541 ns/op	     272 B/op	       2 allocs/op
+BenchmarkLoggLogJson-8     	 2000000	       576 ns/op	     272 B/op	       2 allocs/op
 ```
 
 `BenchmarkLog` - log.Print without installed Logg.  

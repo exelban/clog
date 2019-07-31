@@ -65,13 +65,13 @@ func TestLogg(t *testing.T) {
 		},
 		"empty_json": {
 			data:         "",
-			expectedData: `{"level":"","message":""}`,
+			expectedData: `{"message":""}`,
 			format:       Json,
 			color:        false,
 		},
 		"simple_json": {
 			data:         "Hello World",
-			expectedData: `{"level":"","message":"Hello World"}`,
+			expectedData: `{"message":"Hello World"}`,
 			format:       Json,
 			color:        false,
 		},

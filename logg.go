@@ -15,7 +15,6 @@ package logg
 
 import (
 	"fmt"
-	"github.com/francoispqt/gojay"
 	"io"
 	"log"
 	"os"
@@ -112,7 +111,7 @@ func (l *Logg) Write(b []byte) (int, error) {
 		l.formatHeader(m)
 		l.buf = append(l.buf, m.data...)
 	} else if l.format == Json {
-		b, err := gojay.MarshalJSONObject(m)
+		b, err := m.MarshalJSON()
 		if err != nil {
 			return len(b), err
 		}

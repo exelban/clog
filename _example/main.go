@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/exelban/logg"
 	"log"
-	"logg"
 )
 
 func main() {
-	logg.SetFormat(logg.Pretty)
+	logg.SetFormat(logg.Json)
 	logg.SetDebug()
 
 	log.Print("[ERROR] test")

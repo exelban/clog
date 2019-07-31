@@ -2,7 +2,6 @@ package logg
 
 import (
 	"encoding/json"
-	"github.com/francoispqt/gojay"
 	"log"
 	"testing"
 	"time"
@@ -173,7 +172,7 @@ func TestMessage_MarshalJSONObject(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			b, err := gojay.MarshalJSONObject(tc.m)
+			b, err := tc.m.MarshalJSON()
 			if err != nil {
 				t.Error(err)
 			}

@@ -211,6 +211,7 @@ func SetFlags(flags int) {
 // SetDebug sets the output flags prepared to debug for the logger.
 func SetDebug() {
 	Logger.mu.Lock()
+	Logger.levels.Min = "DEBUG"
 	Logger.flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
 	Logger.mu.Unlock()
 }

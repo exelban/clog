@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	//logg.SetFormat(logg.Pretty)
+	logg.SetFormat(logg.Json)
 	logg.SetDebug()
 
 	log.Print("[ERROR] test")

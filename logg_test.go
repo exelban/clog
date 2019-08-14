@@ -15,14 +15,11 @@ func TestLogg(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	tests := map[string]struct {
-		data   string
-		prefix string
-		style  string
+		data  string
+		level string
 
 		format format
-		flags  int
 		color  bool
-		error  bool
 
 		expectedData string
 		emptyOutput  bool
@@ -44,24 +41,28 @@ func TestLogg(t *testing.T) {
 			expectedData: "[INFO] Hello World",
 			format:       Pretty,
 			color:        true,
+			level:        "INFO",
 		},
 		"DEBUG": {
 			data:        "[DEBUG] min level test",
 			emptyOutput: true,
 			format:      Pretty,
 			color:       true,
+			level:       "DEBUG",
 		},
 		"ERROR": {
 			data:         "[ERROR] min level test",
 			expectedData: "[ERROR] min level test",
 			format:       Pretty,
 			color:        true,
+			level:        "ERROR",
 		},
 		"ERROR_2": {
 			data:         "ERROR min level test",
 			expectedData: "ERROR min level test",
 			format:       Pretty,
 			color:        true,
+			level:        "ERROR",
 		},
 		"empty_json": {
 			data:         "",
@@ -99,10 +100,9 @@ func TestLogg(t *testing.T) {
 
 			log.Print(tc.data)
 
-			b := []byte(tc.data)
 			expectedOutput := tc.expectedData
 			if tc.color {
-				expectedOutput = fmt.Sprintf("\x1b[%sm%s", Logger.colors.define(&b), tc.expectedData)
+				expectedOutput = fmt.Sprintf("\x1b[%sm%s", Logger.colors.define(tc.level), tc.expectedData)
 			}
 			output := readFromBuffer(buf)
 

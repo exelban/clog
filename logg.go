@@ -208,7 +208,7 @@ func SetFlags(flags int) {
 	Logger.mu.Unlock()
 }
 
-// SetDebug sets the output flags prepared to debug for the logger.
+// SetDebug sets the output flags prepared to debug for the logger. And setting minimum level to DEBUG.
 func SetDebug() {
 	Logger.mu.Lock()
 	Logger.levels.Min = "DEBUG"

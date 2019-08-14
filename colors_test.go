@@ -124,45 +124,54 @@ func TestColors_define(t *testing.T) {
 
 	tests := map[string]struct {
 		data  []byte
+		level string
 		color int
 	}{
 		"HIDDEN": {
 			data:  []byte("[HIDDEN] test"),
+			level: "HIDDEN",
 			color: Black,
 		},
 		"ERROR": {
 			data:  []byte("[ERROR] test"),
+			level: "ERROR",
 			color: Red,
 		},
 		"INFO": {
 			data:  []byte("[INFO] test"),
+			level: "INFO",
 			color: Yellow,
 		},
 		"WARN": {
 			data:  []byte("[WARN] test"),
+			level: "WARN",
 			color: Green,
 		},
 		"DEBUG": {
 			data:  []byte("[DEBUG] test"),
+			level: "DEBUG",
 			color: Cyan,
 		},
 		"PANIC": {
 			data:  []byte("[PANIC] test"),
+			level: "PANIC",
 			color: Blue,
 		},
 		"OWN": {
 			data:  []byte("[OWN] test"),
+			level: "OWN",
 			color: Magenta,
 		},
 		"TEST": {
 			data:  []byte("[TEST] test"),
+			level: "TEST",
 			color: White,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			color := cm.define(&tc.data)
+			color := cm.define(tc.level)
 			expectedColor := fmt.Sprintf("3%d;", tc.color)
 
 			if color != expectedColor {

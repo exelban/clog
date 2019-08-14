@@ -1,7 +1,6 @@
 package logg
 
 import (
-	"bytes"
 	"fmt"
 	"sync"
 )
@@ -53,16 +52,14 @@ type ColorsManager struct {
 	mu   sync.Mutex
 }
 
-func (cm *ColorsManager) define(b *[]byte) string {
-	var color string
-
-	for p, c := range cm.list {
-		if bytes.Contains(*b, []byte(p)) {
+func (cm *ColorsManager) define(level string) (color string) {
+	for l, c := range cm.list {
+		if l == level {
 			color = c
+			break
 		}
 	}
-
-	return color
+	return
 }
 
 // CustomColor - allow to set custom colors for prefix.

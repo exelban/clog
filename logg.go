@@ -148,7 +148,7 @@ func (l *Logg) formatHeader(m *message) {
 	buf := &l.buf
 
 	if l.color {
-		m.color = l.colors.define(&m.data)
+		m.color = l.colors.define(m.level)
 		l.buf = append(l.buf, []byte(fmt.Sprintf("%s[%sm", escape, m.color))...)
 	}
 

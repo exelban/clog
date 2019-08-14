@@ -237,6 +237,8 @@ func TestSetDebug(t *testing.T) {
 	if Logger.flags != log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile {
 		t.Errorf("flags must be %v, not: %v", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile, Logger.flags)
 	}
+
+	Logger.levels.Min = "INFO"
 }
 
 func TestSetFormat(t *testing.T) {

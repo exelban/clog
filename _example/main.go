@@ -6,12 +6,12 @@ import (
 )
 
 func main() {
-	logg.SetFormat(logg.Json)
+	//logg.SetFormat(logg.Pretty)
 	logg.SetDebug()
 
 	log.Print("[ERROR] test")
-	log.Print("[INFO] test")
-	log.Print("[DEBUG] test")
+	log.Print("[INFO] test UNMARSHAL_ERROR")
+	log.Print("[DEBUG] test UNMARSHAL_ERROR")
 	log.Print("[WARN] test")
 
 	log.Print("test")

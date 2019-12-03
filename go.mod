@@ -1,3 +1,3 @@
-module github.com/exelban/logg
+module github.com/pkgz/logg
 
 go 1.12

@@ -73,7 +73,7 @@ func main () {
 | `SetDebug() ` | false | Sets the output flags prepared to debug for the logger. |
 | `SetLevel([]string) ` | `DEBUG, INFO, WARN, ERROR` | Sets the levels of logs. |
 | `SetMinLevel(string) ` | `INFO` | Set the minimum levels of logs. |
-| `CustomColor(string, ...interface) ` | | Allow to set custom colors for prefix |
+| `CustomColor(string, int) ` | | Allow to set custom colors for prefix |
 
 ## Benchmarks
 

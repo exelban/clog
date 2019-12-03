@@ -102,7 +102,7 @@ func TestLogg(t *testing.T) {
 
 			expectedOutput := tc.expectedData
 			if tc.color {
-				expectedOutput = fmt.Sprintf("\x1b[%sm%s", Logger.colors.define(tc.level), tc.expectedData)
+				expectedOutput = fmt.Sprintf("%s[%sm%s%s", escape, Logger.colors.define(tc.level), tc.expectedData, escapeClose)
 			}
 			output := readFromBuffer(buf)
 
@@ -162,12 +162,10 @@ func TestLogg_Write(t *testing.T) {
 				t.Error(err)
 			}
 
-			expectedBytes := len(tc.data)
-			if tc.time {
-				expectedBytes += 24
-			}
+			escapeLen := len([]byte(escape)) + len([]byte(escapeClose)) + 23
+			expectedBytes := len(tc.data) + escapeLen
 			if tc.prefix {
-				expectedBytes += 3
+				expectedBytes += 2
 			}
 
 			if expectedBytes != n {

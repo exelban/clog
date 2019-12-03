@@ -6,8 +6,7 @@ import (
 )
 
 const escape = "\x1b"
-const textBase = 30
-const backgroundBase = 40
+const escapeClose = "\x1b[0m"
 
 // Base colors
 const (
@@ -33,20 +32,6 @@ const (
 	HiWhite
 )
 
-// Base attributes
-const (
-	Reset int = iota
-	Bold
-	Faint
-	Italic
-	Underline
-	BlinkSlow
-	BlinkRapid
-	ReverseVideo
-	Concealed
-	CrossedOut
-)
-
 type ColorsManager struct {
 	list map[string]string
 	mu   sync.Mutex
@@ -63,22 +48,10 @@ func (cm *ColorsManager) define(level string) (color string) {
 }
 
 // CustomColor - allow to set custom colors for prefix.
-// Accept parameters in next configuration: [textColor, backgroundColor, style].
-func (cm *ColorsManager) CustomColor(prefix string, v ...interface{}) {
-	if len(v) == 0 {
-		panic(fmt.Sprintf("logg: missed configuration for %s", prefix))
-	}
-
-	switch v[0].(type) {
-	case int:
-	default:
-		panic(fmt.Sprintf("logg: wrong configuration for %s (%v)", prefix, v))
-	}
-
+func (cm *ColorsManager) CustomColor(prefix string, v int) {
 	cm.mu.Lock()
-	defer cm.mu.Unlock()
-
-	cm.list[prefix] = generate(v...)
+	cm.list[prefix] = generate(v)
+	cm.mu.Unlock()
 }
 
 // Base colors
@@ -152,26 +125,6 @@ func (c *colors) HiCyan() string { return generate(HiCyan) }
 // White high intense color.
 func (c *colors) HiWhite() string { return generate(HiWhite) }
 
-func generate(v ...interface{}) string {
-	var textBase = 30
-	var backgroundBase = 40
-
-	var color string
-
-	switch len(v) {
-	case 1:
-		text := textBase + v[0].(int)
-		color = fmt.Sprintf("%d;", text)
-	case 2:
-		text := textBase + v[0].(int)
-		background := backgroundBase + v[1].(int)
-		color = fmt.Sprintf("%d;%d;", text, background)
-	case 3:
-		text := textBase + v[0].(int)
-		background := backgroundBase + v[1].(int)
-		style := v[2].(int)
-		color = fmt.Sprintf("%d;%d;%d;", style, text, background)
-	}
-
-	return color
+func generate(v int) string {
+	return fmt.Sprintf("%d", 30+v)
 }

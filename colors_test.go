@@ -2,7 +2,6 @@ package logg
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -59,47 +58,6 @@ func TestColorsManager_CustomColor(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestColorsManager_CustomColor_panics(t *testing.T) {
-	cm := ColorsManager{
-		list: make(map[string]string),
-	}
-
-	prefix := "[TEST]"
-	defer func() {
-		r := recover()
-
-		if r != fmt.Sprintf("logg: missed configuration for %s", prefix) {
-			t.Error("Must throw missed configuration")
-		}
-
-		if r == nil {
-			t.Errorf("The code did not panic on wrong parameters in Custom()")
-		}
-	}()
-	cm.CustomColor(prefix)
-}
-
-func TestColorsManager_CustomColor_panics2(t *testing.T) {
-	cm := ColorsManager{
-		list: make(map[string]string),
-	}
-
-	prefix := "[TEST]"
-	defer func() {
-		r := recover()
-
-		if !strings.Contains(fmt.Sprintf("%v", r), fmt.Sprintf("logg: wrong configuration for %s", prefix)) {
-			t.Error("Must throw wrong configuration")
-		}
-
-		if r == nil {
-			t.Errorf("The code did not panic on wrong parameters in Custom()")
-		}
-	}()
-
-	cm.CustomColor(prefix, "1")
 }
 
 func TestColors_define(t *testing.T) {
@@ -172,59 +130,10 @@ func TestColors_define(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			color := cm.define(tc.level)
-			expectedColor := fmt.Sprintf("3%d;", tc.color)
+			expectedColor := fmt.Sprintf("3%d", tc.color)
 
 			if color != expectedColor {
 				t.Errorf("wrong color: expected %v, received: %v", expectedColor, color)
-			}
-		})
-	}
-}
-
-func TestColors_background(t *testing.T) {
-	tests := map[string]int{
-		"HiBlack":   HiBlack,
-		"HiRed":     HiRed,
-		"HiGreen":   HiGreen,
-		"HiYellow":  HiYellow,
-		"HiBlue":    HiBlue,
-		"HiMagenta": HiMagenta,
-		"HiCyan":    HiCyan,
-		"HiWhite":   HiWhite,
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			background := generate(HiCyan, tc)
-			expectedBackground := fmt.Sprintf("96;%d;", backgroundBase+tc)
-
-			if background != expectedBackground {
-				t.Errorf("wrong background: expected %v, received: %v", expectedBackground, background)
-			}
-		})
-	}
-}
-
-func TestColors_styles(t *testing.T) {
-	tests := map[string]int{
-		"BOLD":         Bold,
-		"FAINT":        Faint,
-		"ITALIC":       Italic,
-		"UNDERLINE":    Underline,
-		"BLINKSLOW":    BlinkSlow,
-		"BLINKRAPID":   BlinkRapid,
-		"REVERSEVIDEO": ReverseVideo,
-		"CANCEALED":    Concealed,
-		"CROSSEDOUT":   CrossedOut,
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			style := generate(HiCyan, Black, tc)
-			expectedStyle := fmt.Sprintf("%d;96;40;", tc)
-
-			if style != expectedStyle {
-				t.Errorf("wrong style: expected %v, received: %v", expectedStyle, style)
 			}
 		})
 	}

@@ -122,6 +122,10 @@ func (l *Logg) Write(b []byte) (int, error) {
 		l.buf = append(l.buf, '\n')
 	}
 
+	if l.color {
+		l.buf = append(l.buf, []byte(escapeClose)...)
+	}
+
 	return l.out.Write(l.buf)
 }
 
@@ -231,6 +235,6 @@ func SetMinLevel(minLevel string) {
 }
 
 // CustomColor - allow to set custom colors for prefix.
-func CustomColor(prefix string, v ...interface{}) {
-	Logger.colors.CustomColor(prefix, v...)
+func CustomColor(prefix string, v int) {
+	Logger.colors.CustomColor(prefix, v)
 }

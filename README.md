@@ -8,7 +8,7 @@ Better log experience in golang.
 
 ## Installation
 ```bash
-go get github.com/exelban/logg
+go get github.com/pkgz/logg
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ go get github.com/exelban/logg
 package main
 
 import (
-	_ "github.com/exelban/logg"
+	_ "github.com/pkgz/logg"
 	"log"
 )
 
@@ -33,7 +33,7 @@ func main () {
 package main
 
 import (
-	"github.com/exelban/logg"
+	"github.com/pkgz/logg"
 	"log"
 )
 
@@ -49,7 +49,7 @@ func main () {
 package main
 
 import (
-	"github.com/exelban/logg"
+	"github.com/pkgz/logg"
 	"log"
 )
 

@@ -4,7 +4,7 @@ Usage
 
 	package main
 	import (
-		_ "github.com/exelban/logg"
+		_ "github.com/pkgz/logg"
 		"log"
 	)
 	func main () {
@@ -50,14 +50,18 @@ type Logg struct {
 var Logger *Logg
 
 func init() {
-	c := colors{}
+	Logger = New()
+}
+
+// Create new logg instance.
+func New() *Logg {
 	logg := &Logg{
 		colors: ColorsManager{
 			list: map[string]string{
-				"ERROR": c.Red(),
-				"INFO":  c.HiYellow(),
-				"WARN":  c.HiGreen(),
-				"DEBUG": c.HiCyan(),
+				"ERROR": generate(Red),
+				"INFO":  generate(HiYellow),
+				"WARN":  generate(HiGreen),
+				"DEBUG": generate(HiCyan),
 			},
 		},
 		levels: LevelsManager{
@@ -81,7 +85,7 @@ func init() {
 	log.SetOutput(logg)
 	log.SetFlags(0)
 
-	Logger = logg
+	return logg
 }
 
 // Write writes len(p) bytes from p to the underlying data stream.
@@ -101,7 +105,7 @@ func (l *Logg) Write(b []byte) (int, error) {
 	defer l.mu.Unlock()
 
 	m.fileLine(4)
-	m.level = l.levels.define(b)
+	m.level = l.levels.define(&m.data)
 	if !l.levels.check(m.level) {
 		return len(b), nil
 	}

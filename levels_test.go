@@ -222,11 +222,19 @@ func TestLevels_define(t *testing.T) {
 			data:          []byte("[TEST]"),
 			expectedLevel: "TEST",
 		},
+		"test9": {
+			data:          []byte("INFO ERROR"),
+			expectedLevel: "INFO",
+		},
+		"test10": {
+			data:          []byte("DEBUG UNMARSHAL_ERROR"),
+			expectedLevel: "DEBUG",
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			lvl := lm.define(tc.data)
+			lvl := lm.define(&tc.data)
 
 			if lvl != tc.expectedLevel {
 				t.Errorf("wrong level: expected %v, received: %v", tc.expectedLevel, lvl)

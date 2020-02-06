@@ -12,8 +12,6 @@ import (
 )
 
 func TestLogg(t *testing.T) {
-	buf := new(bytes.Buffer)
-
 	tests := map[string]struct {
 		data  string
 		level string
@@ -38,7 +36,7 @@ func TestLogg(t *testing.T) {
 		},
 		"INFO": {
 			data:         "[INFO] Hello World",
-			expectedData: "[INFO] Hello World",
+			expectedData: "[INFO]  Hello World",
 			format:       Pretty,
 			color:        true,
 			level:        "INFO",
@@ -90,13 +88,15 @@ func TestLogg(t *testing.T) {
 		},
 	}
 
-	SetOutput(buf)
-	SetFlags(0)
+	logger := New()
+	buf := new(bytes.Buffer)
+	logger.out = buf
+	log.SetOutput(logger)
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			SetFormat(tc.format)
-			Logger.color = tc.color
+			logger.format = tc.format
+			logger.color = tc.color
 
 			log.Print(tc.data)
 
@@ -115,18 +115,14 @@ func TestLogg(t *testing.T) {
 			}
 		})
 	}
-
-	SetOutput(os.Stderr)
-	SetFlags(log.Ldate | log.Ltime)
-	SetFormat(Pretty)
-	Logger.color = true
 }
 
 func TestLogg_Write(t *testing.T) {
 	tests := map[string]struct {
-		data   []byte
-		time   bool
-		prefix bool
+		data                []byte
+		time                bool
+		prefix              bool
+		levelAdditionalByte bool
 	}{
 		"empty": {
 			data:   []byte(""),
@@ -144,9 +140,10 @@ func TestLogg_Write(t *testing.T) {
 			prefix: false,
 		},
 		"info": {
-			data:   []byte("[INFO] Hello world"),
-			time:   true,
-			prefix: true,
+			data:                []byte("[INFO] Hello world"),
+			time:                true,
+			prefix:              true,
+			levelAdditionalByte: true,
 		},
 		"error": {
 			data:   []byte("[ERROR] Hello world"),
@@ -155,9 +152,18 @@ func TestLogg_Write(t *testing.T) {
 		},
 	}
 
+	logger := New()
+	log.SetOutput(logger)
+
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			n, err := Logger.Write(tc.data)
+			if tc.time {
+				logger.flags = log.Ldate | log.Ltime
+			} else {
+				logger.flags = 0
+			}
+
+			n, err := logger.Write(tc.data)
 			if err != nil {
 				t.Error(err)
 			}
@@ -166,6 +172,9 @@ func TestLogg_Write(t *testing.T) {
 			expectedBytes := len(tc.data) + escapeLen
 			if tc.prefix {
 				expectedBytes += 2
+			}
+			if tc.levelAdditionalByte {
+				expectedBytes++
 			}
 
 			if expectedBytes != n {

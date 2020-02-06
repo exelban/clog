@@ -77,6 +77,9 @@ func TestColors_define(t *testing.T) {
 			"HiBlue":    c.HiBlue(),
 			"HiMagenta": c.HiMagenta(),
 			"HiWhite":   c.HiWhite(),
+			"HiGreen":   c.HiGreen(),
+			"HiYellow":  c.HiYellow(),
+			"HiCyan":    c.HiCyan(),
 		},
 	}
 

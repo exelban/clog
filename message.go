@@ -62,7 +62,8 @@ func (m *message) getMessage() string {
 	}
 
 	mess = strings.TrimPrefix(mess, level)
-	if mess[0] == 32 { // trip space
+
+	for mess[0] == 32 { // trip space
 		mess = strings.TrimPrefix(mess, " ")
 	}
 

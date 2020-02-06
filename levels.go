@@ -2,6 +2,7 @@ package logg
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 )
 
@@ -32,20 +33,32 @@ func (lm *LevelsManager) check(level string) bool {
 	return !ok
 }
 
-func (lm *LevelsManager) define(b []byte) string {
+func (lm *LevelsManager) define(b *[]byte) string {
 	var level string
-	x := bytes.IndexByte(b, '[')
+
+	x := bytes.IndexByte(*b, '[')
 	if x >= 0 {
-		y := bytes.IndexByte(b[x:], ']')
+		y := bytes.IndexByte((*b)[x:], ']')
 		if y >= 0 {
-			level = string(b[x+1 : x+y])
+			level = string((*b)[x+1 : x+y])
+			if len(level) == 4 {
+				*b = bytes.Replace(*b, []byte(fmt.Sprintf("%s]", level)), []byte(fmt.Sprintf("%s] ", level)), -1)
+			}
 		}
 	}
 
 	if level == "" {
+		lim := len(*b)
+		if len(*b) >= 5 {
+			lim = 5
+		}
+
 		for _, l := range lm.List {
-			if bytes.Contains(b, []byte(l)) {
+			if bytes.Contains((*b)[:lim], []byte(l)) {
 				level = l
+				if len(level) == 4 {
+					*b = bytes.Replace(*b, []byte(level), []byte(fmt.Sprintf("%s ", level)), -1)
+				}
 			}
 		}
 	}

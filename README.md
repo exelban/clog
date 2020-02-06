@@ -1,6 +1,6 @@
 # logg
-[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/exelban/logg)
-[![codecov](https://codecov.io/gh/exelban/logg/branch/master/graph/badge.svg)](https://codecov.io/gh/exelban/logg)
+[![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/pkgz/logg)
+[![codecov](https://codecov.io/gh/pkgz/logg/branch/master/graph/badge.svg)](https://codecov.io/gh/pkgz/logg)
 
 ![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-1.png)  
 ![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v2.0.0-2.png)  
@@ -91,4 +91,4 @@ BenchmarkLoggLogJson-8     	 2000000	       576 ns/op	     272 B/op	       2 all
 
 
 ## Licence
-[MIT License](https://github.com/exelban/logg/blob/master/LICENSE)
+[MIT License](https://github.com/pkgz/logg/blob/master/LICENSE)

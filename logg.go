@@ -1,21 +1,9 @@
-// Better log experience in golang.
-/*
-Usage
-
-	package main
-	import (
-		_ "github.com/pkgz/logg"
-		"log"
-	)
-	func main () {
-		log.Print("[ERROR] error text")
-	}
-*/
 package logg
 
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"sync"
@@ -34,37 +22,41 @@ const (
 // output to an io.Writer. Each logging operation makes a single call to
 // the Logg's Write method.
 type Logg struct {
-	colors ColorsManager
-	levels LevelsManager
+	format    format // output format (string/json)
+	flags     int    // time format flags
+	color     bool   // colorize output
+	callDepth int    // callDepth is the count of the number of frames to skip when computing the file name and line number
 
-	format format // pretty or Json
-	flags  int    // time flags
-	color  bool   // if colors are enabled or not
+	levels *Levels
+	colors *Colors
 
 	out io.Writer
 	mu  sync.Mutex
-	buf []byte
 }
 
 // Logger - is a global object which keep Logg configuration.
 var Logger *Logg
 
 func init() {
-	Logger = New()
+	Logger = New(os.Stdout)
 }
 
 // Create new logg instance.
-func New() *Logg {
+func New(w io.Writer) *Logg {
+	if w == nil {
+		w = ioutil.Discard
+	}
+
 	logg := &Logg{
-		colors: ColorsManager{
-			list: map[string]string{
+		colors: &Colors{
+			list: map[string][]byte{
 				"ERROR": generate(Red),
 				"INFO":  generate(HiYellow),
 				"WARN":  generate(HiGreen),
 				"DEBUG": generate(HiCyan),
 			},
 		},
-		levels: LevelsManager{
+		levels: &Levels{
 			List: []string{
 				"DEBUG",
 				"INFO",
@@ -75,12 +67,13 @@ func New() *Logg {
 		},
 
 		format: Pretty,
-		flags:  log.Ldate | log.Ltime,
+		flags:  log.Ldate | log.Ltime, // log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile, // log.Ldate | log.Ltime
 		color:  true,
 
-		out: os.Stderr,
+		out: w,
 	}
-	logg.flags = log.Flags()
+	logg.levels.init()
+	logg.colors.init()
 
 	log.SetOutput(logg)
 	log.SetFlags(0)
@@ -92,153 +85,100 @@ func New() *Logg {
 // It returns the number of bytes written from p (0 <= n <= len(p))
 // and any error encountered that caused the write to stop early.
 // Write must return a non-nil error if it returns n < len(p).
-func (l *Logg) Write(b []byte) (int, error) {
-	m := &message{
-		data:  b,
-		time:  time.Now(),
-		level: "",
-		flags: l.flags,
-		file:  "",
-		line:  0,
-	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	m.fileLine(4)
-	m.level = l.levels.define(&m.data)
-	if !l.levels.check(m.level) {
-		return len(b), nil
+func (l *Logg) Write(b []byte) (n int, err error) {
+	n = len(b)
+	if n > 0 && b[n-1] == '\n' {
+		b = b[0 : n-1]
 	}
 
-	l.buf = l.buf[:0]
+	l.write(b)
+
+	return
+}
+
+func (l *Logg) write(b []byte) {
+	m := messagePool.Get().(*message)
+	m.data = b
+	m.t = time.Now()
+	m.flags = l.flags
+
+	l.levels.define(m) // define level
+	if !m.allowed {
+		return
+	}
+
+	if l.color && l.format == Pretty {
+		l.colors.define(m) // define color
+	}
+
+	m.defineMessage() // define message
+	m.defineTime()    // define time
+	m.defineCaller()  // define caller
+
+	m.buf = m.buf[:0]
 	if l.format == Pretty {
-		l.formatHeader(m)
-		l.buf = append(l.buf, m.data...)
+		// add color
+		if l.color {
+			m.buf = append(m.buf, m.color...)
+		}
+
+		// add time
+		if len(m.time) != 0 {
+			m.buf = append(m.buf, m.time...)
+			m.buf = append(m.buf, ' ')
+		}
+
+		// add caller
+		if len(m.caller) != 0 {
+			m.buf = append(m.buf, m.caller...)
+			m.buf = append(m.buf, ' ')
+		}
+
+		//add level
+		if m.brackets {
+			m.buf = append(m.buf, '[')
+		}
+		m.buf = append(m.buf, m.level...)
+		if m.brackets {
+			m.buf = append(m.buf, ']')
+		}
+
+		// add space between level and message
+		if len(m.level) == 4 {
+			m.buf = append(m.buf, "  "...)
+		} else {
+			m.buf = append(m.buf, ' ')
+		}
+
+		// add message
+		m.buf = append(m.buf, m.message...)
+
+		// close color
+		if l.color {
+			m.buf = append(m.buf, []byte(escapeClose)...)
+		}
 	} else if l.format == Json {
 		b, err := m.MarshalJSON()
 		if err != nil {
-			return len(b), err
+			return
 		}
-		l.buf = append(l.buf, b...)
+		m.buf = append(m.buf, b...)
 	}
 
-	if len(l.buf) == 0 || l.buf[len(l.buf)-1] != '\n' {
-		l.buf = append(l.buf, '\n')
+	if len(m.buf) == 0 || m.buf[len(m.buf)-1] != '\n' {
+		m.buf = append(m.buf, '\n')
 	}
 
-	if l.color {
-		l.buf = append(l.buf, []byte(escapeClose)...)
+	_, err := l.out.Write(m.buf)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "logg: could not write message: %v\n", err)
 	}
 
-	return l.out.Write(l.buf)
-}
+	m.reset()
 
-// Cheap integer to fixed-width decimal ASCII. Give a negative width to avoid zero-padding.
-func itoa(buf *[]byte, i int, wid int) {
-	// Assemble decimal in reverse order.
-	var b [20]byte
-	bp := len(b) - 1
-	for i >= 10 || wid > 1 {
-		wid--
-		q := i / 10
-		b[bp] = byte('0' + i - q*10)
-		bp--
-		i = q
+	const maxSize = 1 << 16 // 64KiB
+	if cap(m.buf) > maxSize {
+		return
 	}
-	// i < 10
-	b[bp] = byte('0' + i)
-	*buf = append(*buf, b[bp:]...)
-}
-
-// formatHeader generates time for message in way as log package generate.
-func (l *Logg) formatHeader(m *message) {
-	t := m.time
-	buf := &l.buf
-
-	if l.color {
-		m.color = l.colors.define(m.level)
-		l.buf = append(l.buf, []byte(fmt.Sprintf("%s[%sm", escape, m.color))...)
-	}
-
-	if l.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
-		if l.flags&log.LUTC != 0 {
-			t = t.UTC()
-		}
-		if l.flags&log.Ldate != 0 {
-			year, month, day := t.Date()
-			itoa(buf, year, 4)
-			*buf = append(*buf, '/')
-			itoa(buf, int(month), 2)
-			*buf = append(*buf, '/')
-			itoa(buf, day, 2)
-			*buf = append(*buf, ' ')
-		}
-		if l.flags&(log.Ltime|log.Lmicroseconds) != 0 {
-			hour, min, sec := t.Clock()
-			itoa(buf, hour, 2)
-			*buf = append(*buf, ':')
-			itoa(buf, min, 2)
-			*buf = append(*buf, ':')
-			itoa(buf, sec, 2)
-			if l.flags&log.Lmicroseconds != 0 {
-				*buf = append(*buf, '.')
-				itoa(buf, t.Nanosecond()/1e3, 6)
-			}
-			*buf = append(*buf, ' ')
-		}
-	}
-	if l.flags&(log.Lshortfile|log.Llongfile) != 0 {
-		*buf = append(*buf, m.file...)
-		*buf = append(*buf, ':')
-		itoa(buf, m.line, -1)
-		*buf = append(*buf, ": "...)
-	}
-}
-
-// SetOutput - sets the output destination for the standard logger.
-func SetOutput(writer io.Writer) {
-	Logger.mu.Lock()
-	Logger.out = writer
-	Logger.mu.Unlock()
-}
-
-// SetFormat sets the output format (Pretty or Json) for the logger.
-func SetFormat(format format) {
-	Logger.mu.Lock()
-	Logger.format = format
-	Logger.mu.Unlock()
-}
-
-// SetFlags sets the output flags for the logger.
-func SetFlags(flags int) {
-	Logger.mu.Lock()
-	Logger.flags = flags
-	Logger.mu.Unlock()
-}
-
-// SetDebug sets the output flags prepared to debug for the logger. And setting minimum level to DEBUG.
-func SetDebug() {
-	Logger.mu.Lock()
-	Logger.levels.Min = "DEBUG"
-	Logger.flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
-	Logger.mu.Unlock()
-}
-
-// SetLevels - sets the levels of logs.
-func SetLevels(list []string) {
-	Logger.levels.mu.Lock()
-	Logger.levels.List = list
-	Logger.levels.mu.Unlock()
-}
-
-// SetMinLevel - set the minimum levels of logs.
-func SetMinLevel(minLevel string) {
-	Logger.levels.mu.Lock()
-	Logger.levels.Min = minLevel
-	Logger.levels.mu.Unlock()
-}
-
-// CustomColor - allow to set custom colors for prefix.
-func CustomColor(prefix string, v int) {
-	Logger.colors.CustomColor(prefix, v)
+	messagePool.Put(m)
 }

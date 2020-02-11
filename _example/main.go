@@ -1,23 +1,32 @@
 package main
 
 import (
-	_ "github.com/pkgz/logg"
+	"github.com/pkgz/logg"
 	"log"
+	"os"
 )
 
 func main() {
-	//logg.SetFormat(logg.Json)
-	//logg.SetDebug()
+	logg.NewGlobal(os.Stdout)
+	//log := logg.New(os.Stdout)
+	//log.SetFormat(logg.Json)
+	//logg.NewGlobal(os.Stdout)
+	//logg.DebugMode()
 
-	log.Print("[ERROR] test")
-	//log.Print("[INFO] test UNMARSHAL_ERROR")
-	//log.Print("[DEBUG] test UNMARSHAL_ERROR")
-	//log.Print("[WARN] test")
-	//
-	//log.Print("test")
-	//
-	//log.Print("ERROR test")
-	//log.Print("INFO test UNMARSHAL_ERROR")
-	//log.Print("DEBUG test UNMARSHAL_ERROR")
-	//log.Print("WARN test")
+	log.Print("[INF] test")
+	log.Print("test")
+
+	//log.Debug("test")
+
+	//log.Debug("[ERROR] test", 1, 2, "2")
+	log.Print("[INFO] test UNMARSHAL_ERROR")
+	log.Print("[DEBUG] test UNMARSHAL_ERROR")
+	log.Print("[WARN] test")
+
+	log.Print("test")
+
+	log.Print("ERROR test")
+	log.Print("INFO test UNMARSHAL_ERROR")
+	log.Print("DEBUG test UNMARSHAL_ERROR")
+	log.Print("WARN test")
 }

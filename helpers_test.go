@@ -67,17 +67,17 @@ func Test_appendTimestamp(t *testing.T) {
 		"milliseconds only": {
 			t:     now,
 			flags: Lmicroseconds,
-			buf:   []byte(now.Format(".999999")),
+			buf:   []byte(now.Add(time.Nanosecond * 500).Format(".999999")),
 		},
 		"time with milliseconds": {
 			t:     now,
 			flags: Ltime | Lmicroseconds,
-			buf:   []byte(now.Format("15:04:05.999999")),
+			buf:   []byte(now.Add(time.Nanosecond * 500).Format("15:04:05.999999")),
 		},
 		"date with time with milliseconds": {
 			t:     now,
 			flags: Ldate | Ltime | Lmicroseconds,
-			buf:   []byte(now.Format("2006-01-02 15:04:05.999999")),
+			buf:   []byte(now.Add(time.Nanosecond * 500).Format("2006-01-02 15:04:05.999999")),
 		},
 	}
 

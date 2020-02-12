@@ -1,7 +1,6 @@
 package logg
 
 import (
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -66,12 +65,12 @@ func (m *message) build(b []byte) []byte {
 func (m *message) buildJSON(b []byte) {
 	js := newJson()
 
-	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
+	if m.flags&(Ldate|Ltime|Lmicroseconds) != 0 {
 		js.buf = append(appendTimestamp(time.Now(), m.format, m.flags, js.addField("time", js.buf)))
 	}
 
-	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
-		file, line := caller(m.calldepth, m.flags&log.Lshortfile != 0)
+	if m.flags&(Lshortfile|Llongfile) != 0 {
+		file, line := caller(m.calldepth, m.flags&Lshortfile != 0)
 
 		js.buf = append(js.addField("file", js.buf), file...)
 		js.buf = append(js.addField("line", js.buf), strconv.Itoa(line)...)
@@ -96,12 +95,12 @@ func (m *message) buildPretty(b []byte) {
 		m.buf = append(m.buf, colors[m.level]...)
 	}
 
-	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
+	if m.flags&(Ldate|Ltime|Lmicroseconds) != 0 {
 		m.buf = appendTimestamp(time.Now(), m.format, m.flags, m.buf)
 	}
 
-	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
-		file, line := caller(m.calldepth, m.flags&log.Lshortfile != 0)
+	if m.flags&(Lshortfile|Llongfile) != 0 {
+		file, line := caller(m.calldepth, m.flags&Lshortfile != 0)
 
 		if len(m.buf) != 0 && m.buf[len(m.buf)-1] != ' ' {
 			m.buf = append(m.buf, ' ')
@@ -112,7 +111,7 @@ func (m *message) buildPretty(b []byte) {
 	}
 
 	if m.level != Empty {
-		if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 || m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+		if m.flags&(Ldate|Ltime|Lmicroseconds) != 0 || m.flags&(Lshortfile|Llongfile) != 0 {
 			m.buf = append(m.buf, ' ')
 		}
 		m.buf = append(m.buf, levels[m.level]...)

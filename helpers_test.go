@@ -2,7 +2,6 @@ package logg
 
 import (
 	"bytes"
-	"log"
 	"runtime"
 	"strings"
 	"testing"
@@ -52,32 +51,32 @@ func Test_timestamp(t *testing.T) {
 		},
 		"default format": {
 			t:     now,
-			flags: log.LstdFlags,
+			flags: LstdFlags,
 			buf:   []byte(now.Format("2006-01-02 15:04:05")),
 		},
 		"date only": {
 			t:     now,
-			flags: log.Ldate,
+			flags: Ldate,
 			buf:   []byte(now.Format("2006-01-02")),
 		},
 		"time only": {
 			t:     now,
-			flags: log.Ltime,
+			flags: Ltime,
 			buf:   []byte(now.Format("15:04:05")),
 		},
 		"milliseconds only": {
 			t:     now,
-			flags: log.Lmicroseconds,
+			flags: Lmicroseconds,
 			buf:   []byte(now.Format(".999999")),
 		},
 		"time with milliseconds": {
 			t:     now,
-			flags: log.Ltime | log.Lmicroseconds,
+			flags: Ltime | Lmicroseconds,
 			buf:   []byte(now.Format("15:04:05.999999")),
 		},
 		"date with time with milliseconds": {
 			t:     now,
-			flags: log.Ldate | log.Ltime | log.Lmicroseconds,
+			flags: Ldate | Ltime | Lmicroseconds,
 			buf:   []byte(now.Format("2006-01-02 15:04:05.999999")),
 		},
 	}
@@ -102,7 +101,7 @@ func Benchmark_appendTimestamp(b *testing.B) {
 	buf := []byte{}
 
 	for n := 0; n < b.N; n++ {
-		appendTimestamp(now, Pretty, log.LstdFlags, buf)
+		appendTimestamp(now, Pretty, LstdFlags, buf)
 	}
 }
 

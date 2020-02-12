@@ -3,7 +3,6 @@ package logg
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +21,7 @@ func TestLogg_newMessage(t *testing.T) {
 			level: Info,
 		},
 		"flags": {
-			flags: log.LstdFlags,
+			flags: LstdFlags,
 		},
 		"calldepth": {
 			calldepth: 4,
@@ -108,14 +107,14 @@ func TestLogg_message_build(t *testing.T) {
 		"time": {
 			data:   []byte("test"),
 			level:  Empty,
-			flags:  log.LstdFlags,
+			flags:  LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s test", time.Now().Format("2006-01-02 15:04:05"))),
 			json:   []byte(fmt.Sprintf(`{"time": "%s", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"caller": {
 			data:      []byte("test"),
 			level:     Empty,
-			flags:     log.Lshortfile,
+			flags:     Lshortfile,
 			calldepth: 3,
 			pretty:    []byte("$1:$2 test"),
 			json:      []byte(`{"file": "$1", "line": "$2", "message": "test"}`),
@@ -136,14 +135,14 @@ func TestLogg_message_build(t *testing.T) {
 		"time + level + message": {
 			data:   []byte("test"),
 			level:  Warning,
-			flags:  log.LstdFlags,
+			flags:  LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s WRN test", time.Now().Format("2006-01-02 15:04:05"))),
 			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"time + caller + level + message": {
 			data:      []byte("test"),
 			level:     Warning,
-			flags:     log.LstdFlags | log.Lshortfile,
+			flags:     LstdFlags | Lshortfile,
 			calldepth: 3,
 			pretty:    []byte(fmt.Sprintf("%s $1:$2 WRN test", time.Now().Format("2006-01-02 15:04:05"))),
 			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
@@ -152,7 +151,7 @@ func TestLogg_message_build(t *testing.T) {
 			data:   []byte("test"),
 			level:  Warning,
 			color:  true,
-			flags:  log.LstdFlags,
+			flags:  LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s%s WRN test%s", generate(HiGreen), time.Now().Format("2006-01-02 15:04:05"), escapeClose)),
 			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
@@ -160,7 +159,7 @@ func TestLogg_message_build(t *testing.T) {
 			data:      []byte("test"),
 			level:     Warning,
 			color:     true,
-			flags:     log.LstdFlags | log.Lshortfile,
+			flags:     LstdFlags | Lshortfile,
 			calldepth: 3,
 			pretty:    []byte(fmt.Sprintf("%s%s $1:$2 WRN test%s", generate(HiGreen), time.Now().Format("2006-01-02 15:04:05"), escapeClose)),
 			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
@@ -172,8 +171,8 @@ func TestLogg_message_build(t *testing.T) {
 			m := newMessage(tc.level, tc.calldepth, tc.flags, Pretty, tc.color)
 			m.build(tc.data)
 
-			if tc.flags&(log.Lshortfile|log.Llongfile) != 0 {
-				file, line := caller(1, tc.flags&log.Lshortfile != 0)
+			if tc.flags&(Lshortfile|Llongfile) != 0 {
+				file, line := caller(1, tc.flags&Lshortfile != 0)
 				tc.pretty = []byte(strings.Replace(string(tc.pretty), "$1", file, 1))
 				tc.pretty = []byte(strings.Replace(string(tc.pretty), "$2", fmt.Sprint(line-3), 1))
 			}
@@ -185,8 +184,8 @@ func TestLogg_message_build(t *testing.T) {
 			m = newMessage(tc.level, tc.calldepth, tc.flags, Json, tc.color)
 			m.build(tc.data)
 
-			if tc.flags&(log.Lshortfile|log.Llongfile) != 0 {
-				file, line := caller(1, tc.flags&log.Lshortfile != 0)
+			if tc.flags&(Lshortfile|Llongfile) != 0 {
+				file, line := caller(1, tc.flags&Lshortfile != 0)
 				tc.json = []byte(strings.Replace(string(tc.json), "$1", file, 1))
 				tc.json = []byte(strings.Replace(string(tc.json), "$2", fmt.Sprint(line-3), 1))
 			}

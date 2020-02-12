@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"runtime"
 	"time"
 	"unsafe"
@@ -49,6 +48,10 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 		return append(dst, "0000-00-00 00:00:00"...)
 	}
 
+	if flags&LUTC != 0 {
+		t = t.UTC()
+	}
+
 	t = t.Add(time.Nanosecond * 500) // To round under microsecond
 	year := t.Year()
 	year100 := year / 100
@@ -65,7 +68,7 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 		space = 'T'
 	}
 
-	if flags&log.Ldate != 0 && flags&log.Ltime != 0 {
+	if flags&Ldate != 0 && flags&Ltime != 0 {
 		dst = append(dst, []byte{
 			digits10[year100], digits01[year100],
 			digits10[year1], digits01[year1],
@@ -80,7 +83,7 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 			':',
 			digits10[second], digits01[second],
 		}...)
-	} else if flags&log.Ldate != 0 && flags&log.Ltime == 0 {
+	} else if flags&Ldate != 0 && flags&Ltime == 0 {
 		dst = append(dst, []byte{
 			digits10[year100], digits01[year100],
 			digits10[year1], digits01[year1],
@@ -89,7 +92,7 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 			'-',
 			digits10[day], digits01[day],
 		}...)
-	} else if flags&log.Ldate == 0 && flags&log.Ltime != 0 {
+	} else if flags&Ldate == 0 && flags&Ltime != 0 {
 		dst = append(dst, []byte{
 			digits10[hour], digits01[hour],
 			':',
@@ -99,7 +102,7 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 		}...)
 	}
 
-	if flags&log.Lmicroseconds != 0 {
+	if flags&Lmicroseconds != 0 {
 		micro10000 := micro / 10000
 		micro100 := micro / 100 % 100
 		micro1 := micro % 100
@@ -111,7 +114,7 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 		}...)
 	}
 
-	if format == Json {
+	if format == Json && flags&LUTC == 0 {
 		_, s := t.Zone()
 		dst = append(dst, []byte{
 			'+',

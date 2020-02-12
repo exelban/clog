@@ -8,6 +8,7 @@ import (
 func main() {
 	log := logg.New(os.Stdout)
 	//log.SetFormat(logg.Json)
+	log.SetFlags(logg.LstdFlags | logg.LUTC)
 
 	log.Print("DEBUG test logging, but use a somewhat realistic message length.")
 	log.Print("INF test logging, but use a somewhat realistic message length.")

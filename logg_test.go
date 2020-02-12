@@ -48,7 +48,7 @@ func TestNewGlobal(t *testing.T) {
 
 	output := readFromBuffer(buf)
 
-	expected := appendTimestamp(time.Now(), Pretty, log.LstdFlags, []byte{})
+	expected := appendTimestamp(time.Now(), Pretty, LstdFlags, []byte{})
 	expected = append(expected, fmt.Sprintf(" %s", test)...)
 
 	if output != string(expected) {

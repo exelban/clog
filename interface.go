@@ -3,7 +3,6 @@ package logg
 import (
 	"fmt"
 	"io"
-	"log"
 )
 
 // PRINT
@@ -59,7 +58,7 @@ func (l *Logg) Panicf(format string, args ...interface{}) {
 // SETTINGS
 
 func (l *Logg) DebugMode() {
-	l.flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
+	l.flags = Ldate | Ltime | Lmicroseconds | Lshortfile
 	l.minLevel = Debug
 }
 

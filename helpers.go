@@ -114,15 +114,19 @@ func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 		}...)
 	}
 
-	if format == Json && flags&LUTC == 0 {
+	if format == Json {
 		_, s := t.Zone()
-		dst = append(dst, []byte{
-			'+',
-			digits10[s/3600], digits01[s/3600],
-			':',
-			'0',
-			'0',
-		}...)
+		if s == 0 {
+			dst = append(dst, 'Z')
+		} else {
+			dst = append(dst, []byte{
+				'+',
+				digits10[s/3600], digits01[s/3600],
+				':',
+				'0',
+				'0',
+			}...)
+		}
 	}
 
 	return dst

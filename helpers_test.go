@@ -36,7 +36,7 @@ func Test_caller(t *testing.T) {
 	}
 }
 
-func Test_timestamp(t *testing.T) {
+func Test_appendTimestamp(t *testing.T) {
 	now := time.Now()
 	tests := map[string]struct {
 		t      time.Time

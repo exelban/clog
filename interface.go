@@ -79,6 +79,10 @@ func (l *Logg) ToggleColor(value bool) {
 	l.color = value
 }
 
+func (l *Logg) MinLevel(level level) {
+	l.minLevel = level
+}
+
 // Global
 
 func Print(args ...interface{}) { logg.Print(args...) }

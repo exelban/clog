@@ -2,28 +2,15 @@ package main
 
 import (
 	"github.com/pkgz/logg"
-	"log"
 	"os"
 )
 
 func main() {
-	logg.NewGlobal(os.Stdout)
-	//log := logg.New(os.Stdout)
-	//logg.SetFormat(logg.Json)
-	//logg.NewGlobal(os.Stdout)
-	//logg.DebugMode()
+	log := logg.New(os.Stdout)
+	//log.SetFormat(logg.Json)
 
-	log.Print("[INF] test")
-	log.Print("test")
-
-	//log.Print("[INFO] test UNMARSHAL_ERROR")
-	//log.Print("[DEBUG] test UNMARSHAL_ERROR")
-	//log.Print("[WARN] test")
-	//
-	//log.Print("test")
-	//
-	//log.Print("ERROR test")
-	//log.Print("INFO test UNMARSHAL_ERROR")
-	//log.Print("DEBUG test UNMARSHAL_ERROR")
-	//log.Print("WARN test")
+	log.Print("DEBUG test logging, but use a somewhat realistic message length.")
+	log.Print("INF test logging, but use a somewhat realistic message length.")
+	log.Print("ERROR test logging, but use a somewhat realistic message length.")
+	log.Print("WRN test logging, but use a somewhat realistic message length.")
 }

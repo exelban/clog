@@ -1,3 +1,25 @@
+// Better log experience in golang.
+/*
+Usage
+	package main
+
+	import (
+		"github.com/pkgz/logg"
+		"log"
+		"os"
+	)
+
+	func main () {
+		logg.NewGlobal(os.Stdout)
+
+		log.Print("DEBUG some text")
+		log.Print("INF some text")
+		log.Print("[ERROR] some text")
+		log.Print("[WARN] some text")
+		log.Print("some text")
+	}
+*/
+
 package logg
 
 import (

@@ -105,12 +105,12 @@ func TestLogg_message_build(t *testing.T) {
 			pretty: []byte("test"),
 			json:   []byte(`{"message": "test"}`),
 		},
-		"timestamp": {
+		"time": {
 			data:   []byte("test"),
 			level:  Empty,
 			flags:  log.LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s test", time.Now().Format("2006-01-02 15:04:05"))),
-			json:   []byte(fmt.Sprintf(`{"time": "%s", "message": "test"}`, time.Now().Format("2006-01-02 15:04:05"))),
+			json:   []byte(fmt.Sprintf(`{"time": "%s", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"caller": {
 			data:      []byte("test"),
@@ -138,7 +138,7 @@ func TestLogg_message_build(t *testing.T) {
 			level:  Warning,
 			flags:  log.LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s WRN test", time.Now().Format("2006-01-02 15:04:05"))),
-			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format("2006-01-02 15:04:05"))),
+			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"time + caller + level + message": {
 			data:      []byte("test"),
@@ -146,7 +146,7 @@ func TestLogg_message_build(t *testing.T) {
 			flags:     log.LstdFlags | log.Lshortfile,
 			calldepth: 3,
 			pretty:    []byte(fmt.Sprintf("%s $1:$2 WRN test", time.Now().Format("2006-01-02 15:04:05"))),
-			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format("2006-01-02 15:04:05"))),
+			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"color + time + level + message": {
 			data:   []byte("test"),
@@ -154,7 +154,7 @@ func TestLogg_message_build(t *testing.T) {
 			color:  true,
 			flags:  log.LstdFlags,
 			pretty: []byte(fmt.Sprintf("%s%s WRN test%s", generate(HiGreen), time.Now().Format("2006-01-02 15:04:05"), escapeClose)),
-			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format("2006-01-02 15:04:05"))),
+			json:   []byte(fmt.Sprintf(`{"time": "%s", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 		"color + caller + time + level + message": {
 			data:      []byte("test"),
@@ -163,7 +163,7 @@ func TestLogg_message_build(t *testing.T) {
 			flags:     log.LstdFlags | log.Lshortfile,
 			calldepth: 3,
 			pretty:    []byte(fmt.Sprintf("%s%s $1:$2 WRN test%s", generate(HiGreen), time.Now().Format("2006-01-02 15:04:05"), escapeClose)),
-			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format("2006-01-02 15:04:05"))),
+			json:      []byte(fmt.Sprintf(`{"time": "%s", "file": "$1", "line": "$2", "level": "WRN", "message": "test"}`, time.Now().Format(time.RFC3339))),
 		},
 	}
 

@@ -1,6 +1,6 @@
 # logg
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/pkgz/logg)
-[![Tests](https://img.shields.io/github/workflow/status/pkgz/logg/Code)](https://github.com/pkgz/logg/actions)
+[![Tests](https://img.shields.io/github/workflow/status/pkgz/logg/Code%20coverage)](https://github.com/pkgz/logg/actions)
 [![codecov](https://img.shields.io/codecov/c/gh/pkgz/logg)](https://codecov.io/gh/pkgz/logg)
 
 

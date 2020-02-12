@@ -8,18 +8,11 @@ import (
 )
 
 type message struct {
-	data []byte // original log data
-
-	time    []byte // message time
-	level   []byte // message level
-	file    []byte // caller file path
-	line    []byte // caller line number
-	message []byte // log message
-
-	t         time.Time
-	lvl       level
-	flags     int
+	level     level
 	calldepth int
+	flags     int
+	format    format
+	color     bool
 
 	buf []byte
 }
@@ -27,131 +20,113 @@ type message struct {
 var messagePool = sync.Pool{
 	New: func() interface{} {
 		return &message{
-			buf: make([]byte, 0, 500),
-			lvl: Empty,
+			buf:   make([]byte, 0, 500),
+			level: Empty,
 		}
 	},
 }
 
 // fetch a message from sync.Pool.
-func newMessage(b []byte, level level, flags int, calldepth int) *message {
+func newMessage(level level, calldepth int, flags int, format format, color bool) *message {
 	m := messagePool.Get().(*message)
-	m.t = time.Now()
-	if flags&log.LUTC != 0 {
-		m.t = m.t.In(time.UTC)
-	}
 
-	m.data = b
+	m.level = level
+	m.calldepth = calldepth
 	m.flags = flags
-	m.calldepth = ContextCallDepth + calldepth
-	m.lvl = level
+	m.format = format
+	m.color = color
+
+	m.buf = m.buf[:0]
 
 	return m
 }
 
 // reset message object and put to sync.Pool.
 func (m *message) put() {
-	m.data = m.data[:0]
-
-	m.time = []byte{}
-	m.level = []byte{}
-	m.line = []byte{}
-	m.file = []byte{}
-	m.message = []byte{}
-
-	m.lvl = Empty
-	m.calldepth = 0
-	m.flags = 0
-
-	m.buf = m.buf[:0]
-
 	const maxSize = 1 << 16 // 64KiB
 	if cap(m.buf) > maxSize {
 		return
 	}
+
 	messagePool.Put(m)
 }
 
-// Parse a provided byte array and try to fetch time, caller and message from log.
-func (m *message) build() {
-	if m.lvl == Empty {
-		m.lvl = defineLevel(&m.data)
+func (m *message) build(b []byte) []byte {
+	if len(b) != 0 {
+		if m.format == Json {
+			m.buildJSON(b)
+		} else {
+			m.buildPretty(b)
+		}
+	}
+
+	return append(m.buf, '\n')
+}
+
+func (m *message) buildJSON(b []byte) {
+	js := newJson()
+
+	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
+		js.buf = appendTimestamp(time.Now(), m.flags, js.addField("time", js.buf))
 	}
 
 	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
 		file, line := caller(m.calldepth, m.flags&log.Lshortfile != 0)
 
-		m.line = append(m.line, strconv.Itoa(line)...)
-		m.file = append(m.file, file...)
+		js.buf = append(js.addField("file", js.buf), file...)
+		js.buf = append(js.addField("line", js.buf), strconv.Itoa(line)...)
 	}
 
-	if m.flags != 0 {
-		m.time = timestamp(m.t, m.flags)
+	if m.level != Empty {
+		js.buf = append(js.addField("level", js.buf), levels[m.level]...)
 	}
 
-	m.message = m.data
+	if len(b) != 0 {
+		js.buf = append(js.addField("message", js.buf), b...)
+	}
+
+	js.close()
+	m.buf = js.buf
+
+	js.put()
 }
 
-// Build a log from message.
-func (m *message) exec(format format, color bool) {
-	if format == Json {
-		js := newJSON()
-
-		if len(m.time) != 0 {
-			js.addField("time", m.time)
-		}
-		if m.lvl != Empty {
-			js.addField("level", []byte(levels[m.lvl]))
-		}
-		if len(m.message) != 0 {
-			js.addField("message", m.message)
-		}
-		if len(m.file) != 0 {
-			js.addField("file", m.file)
-		}
-		if len(m.line) != 0 {
-			js.addField("line", m.line)
-		}
-
-		js.close()
-		m.buf = append(m.buf, js.buf...)
-
-		js.put()
-	} else {
-		// add time
-		if len(m.time) != 0 {
-			m.buf = append(m.buf, m.time...)
-			m.buf = append(m.buf, ' ')
-		}
-
-		// add caller
-		if len(m.file) != 0 {
-			m.buf = append(m.buf, m.file...)
-			if len(m.line) != 0 {
-				m.buf = append(m.buf, ':')
-				m.buf = append(m.buf, m.line...)
-			}
-			m.buf = append(m.buf, ' ')
-		}
-
-		//add level
-		if m.lvl != Empty {
-			m.buf = append(m.buf, levels[m.lvl]...)
-		}
-
-		// add message
-		if len(m.message) > 0 && len(m.buf) > 0 && m.message[0] != ' ' && m.buf[len(m.buf)-1] != ' ' {
-			m.buf = append(m.buf, ' ')
-		}
-		m.buf = append(m.buf, m.message...)
-
-		// colorize output
-		if color && m.lvl != Empty {
-			colorize(&m.buf, colors[int(m.lvl)])
-		}
+func (m *message) buildPretty(b []byte) {
+	if m.color && m.level != Empty {
+		m.buf = append(m.buf, colors[m.level]...)
 	}
 
-	if len(m.buf) == 0 || m.buf[len(m.buf)-1] != '\n' {
-		m.buf = append(m.buf, '\n')
+	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
+		m.buf = appendTimestamp(time.Now(), m.flags, m.buf)
+	}
+
+	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+		file, line := caller(m.calldepth, m.flags&log.Lshortfile != 0)
+
+		if len(m.buf) != 0 && m.buf[len(m.buf)-1] != ' ' {
+			m.buf = append(m.buf, ' ')
+		}
+
+		m.buf = append(m.buf, file+":"...)
+		m.buf = append(m.buf, strconv.Itoa(line)...)
+	}
+
+	if m.level != Empty {
+		if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 || m.flags&(log.Lshortfile|log.Llongfile) != 0 {
+			m.buf = append(m.buf, ' ')
+		}
+		m.buf = append(m.buf, levels[m.level]...)
+	}
+
+	if len(b) != 0 {
+		if len(m.buf) != 0 && m.buf[len(m.buf)-1] != ' ' {
+			m.buf = append(m.buf, ' ')
+		}
+
+		m.buf = append(m.buf, b...)
+	}
+
+	if m.color && m.level != Empty {
+		m.buf = append(m.buf, []byte(escapeClose)...)
 	}
 }

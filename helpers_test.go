@@ -83,12 +83,25 @@ func Test_timestamp(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			resp := timestamp(tc.t, tc.flags)
+			buf := []byte{}
+			buf = appendTimestamp(tc.t, tc.flags, buf)
 
-			if !bytes.Equal(resp, tc.buf) {
-				t.Errorf("wrong timestamp. Expected: %s, received: %s", string(tc.buf), string(resp))
+			if !bytes.Equal(buf, tc.buf) {
+				t.Errorf("wrong timestamp. Expected: %s, received: %s", string(tc.buf), string(buf))
 			}
 		})
+	}
+}
+
+func Benchmark_appendTimestamp(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	now := time.Now()
+	buf := []byte{}
+
+	for n := 0; n < b.N; n++ {
+		appendTimestamp(now, log.LstdFlags, buf)
 	}
 }
 
@@ -113,87 +126,88 @@ func Test_defineLevel(t *testing.T) {
 			result: []byte("test"),
 			level:  Info,
 		},
-		//"short with brackets": {
-		//	data:   []byte("[ERR] test"),
-		//	result: []byte("test"),
-		//	level:  Error,
-		//},
-		//"double short": {
-		//	data:   []byte("WRN ERR test"),
-		//	result: []byte("ERR test"),
-		//	level:  Warning,
-		//},
-		//"long": {
-		//	data:   []byte("DEBUG test"),
-		//	result: []byte("test"),
-		//	level:  Debug,
-		//},
-		//"long with brackets": {
-		//	data:   []byte("[PANIC] test"),
-		//	result: []byte("test"),
-		//	level:  Panic,
-		//},
-		//"double long": {
-		//	data:   []byte("PANIC DEBUG test"),
-		//	result: []byte("DEBUG test"),
-		//	level:  Panic,
-		//},
-		//
-		//"debug short": {
-		//	data:   []byte("DBG test"),
-		//	result: []byte("test"),
-		//	level:  Debug,
-		//},
-		//"debug long": {
-		//	data:   []byte("DEBUG test"),
-		//	result: []byte("test"),
-		//	level:  Debug,
-		//},
-		//"info short": {
-		//	data:   []byte("INF test"),
-		//	result: []byte("test"),
-		//	level:  Info,
-		//},
-		//"info long": {
-		//	data:   []byte("INFO test"),
-		//	result: []byte("test"),
-		//	level:  Info,
-		//},
-		//"error short": {
-		//	data:   []byte("ERR test"),
-		//	result: []byte("test"),
-		//	level:  Error,
-		//},
-		//"error long": {
-		//	data:   []byte("ERROR test"),
-		//	result: []byte("test"),
-		//	level:  Error,
-		//},
-		//"warning short": {
-		//	data:   []byte("WRN test"),
-		//	result: []byte("test"),
-		//	level:  Warning,
-		//},
-		//"warning long": {
-		//	data:   []byte("WARN test"),
-		//	result: []byte("test"),
-		//	level:  Warning,
-		//},
-		//"panic short": {
-		//	data:   []byte("PNC test"),
-		//	result: []byte("test"),
-		//	level:  Panic,
-		//},
-		//"panic long": {
-		//	data:   []byte("PANIC test"),
-		//	result: []byte("test"),
-		//	level:  Panic,
-		//},
+		"short with brackets": {
+			data:   []byte("[ERR] test"),
+			result: []byte("test"),
+			level:  Error,
+		},
+		"double short": {
+			data:   []byte("WRN ERR test"),
+			result: []byte("ERR test"),
+			level:  Warning,
+		},
+		"long": {
+			data:   []byte("DEBUG test"),
+			result: []byte("test"),
+			level:  Debug,
+		},
+		"long with brackets": {
+			data:   []byte("[PANIC] test"),
+			result: []byte("test"),
+			level:  Panic,
+		},
+		"double long": {
+			data:   []byte("PANIC DEBUG test"),
+			result: []byte("DEBUG test"),
+			level:  Panic,
+		},
+
+		"debug short": {
+			data:   []byte("DBG test"),
+			result: []byte("test"),
+			level:  Debug,
+		},
+		"debug long": {
+			data:   []byte("DEBUG test"),
+			result: []byte("test"),
+			level:  Debug,
+		},
+		"info short": {
+			data:   []byte("INF test"),
+			result: []byte("test"),
+			level:  Info,
+		},
+		"info long": {
+			data:   []byte("INFO test"),
+			result: []byte("test"),
+			level:  Info,
+		},
+		"error short": {
+			data:   []byte("ERR test"),
+			result: []byte("test"),
+			level:  Error,
+		},
+		"error long": {
+			data:   []byte("ERROR test"),
+			result: []byte("test"),
+			level:  Error,
+		},
+		"warning short": {
+			data:   []byte("WRN test"),
+			result: []byte("test"),
+			level:  Warning,
+		},
+		"warning long": {
+			data:   []byte("WARN test"),
+			result: []byte("test"),
+			level:  Warning,
+		},
+		"panic short": {
+			data:   []byte("PNC test"),
+			result: []byte("test"),
+			level:  Panic,
+		},
+		"panic long": {
+			data:   []byte("PANIC test"),
+			result: []byte("test"),
+			level:  Panic,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			lvl := defineLevel(&tc.data)
+			tc.data = removeLevel(tc.data, lvl)
 
 			if lvl != tc.level {
 				t.Errorf("wrong level. Expected: %d, received: %d", tc.level, lvl)
@@ -203,5 +217,25 @@ func Test_defineLevel(t *testing.T) {
 				t.Errorf("level not removed from data. Expected: %s, received: %s", string(tc.result), string(tc.data))
 			}
 		})
+	}
+}
+
+func Benchmark_defineLevel(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for n := 0; n < b.N; n++ {
+		t := []byte("INF test")
+		_ = defineLevel(&t)
+	}
+}
+
+func Benchmark_removeLevel(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for n := 0; n < b.N; n++ {
+		t := []byte("INFO test")
+		t = removeLevel(t, Info)
 	}
 }

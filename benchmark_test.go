@@ -1,7 +1,6 @@
 package logg
 
 import (
-	"github.com/rs/zerolog"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -12,10 +11,6 @@ var (
 	shortLevelTestMessage = []byte("ERR test logging, but use a somewhat realistic message length.")
 	longLevelTestMessage  = []byte("PANIC test logging, but use a somewhat realistic message length.")
 )
-
-/******************************************************************************
-*                                 Logg.Write                                  *
-******************************************************************************/
 
 func BenchmarkLogg_New(b *testing.B) {
 	b.ReportAllocs()
@@ -61,33 +56,36 @@ func BenchmarkLogg_Write(b *testing.B) {
 }
 
 func BenchmarkLogg_Write_JSON(b *testing.B) {
-	b.ReportAllocs()
-	b.ResetTimer()
-
 	logger := New(ioutil.Discard)
 	logger.format = Json
 
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
+	b.Run("test", func(b *testing.B) {
+		b.ResetTimer()
+		b.ReportAllocs()
+
+		for n := 0; n < b.N; n++ {
 			_, _ = logger.Write(testMessage)
 		}
 	})
+
+	b.Run("short", func(b *testing.B) {
+		b.ResetTimer()
+		b.ReportAllocs()
+
+		for n := 0; n < b.N; n++ {
+			_, _ = logger.Write(shortLevelTestMessage)
+		}
+	})
+
+	b.Run("long", func(b *testing.B) {
+		b.ResetTimer()
+		b.ReportAllocs()
+
+		for n := 0; n < b.N; n++ {
+			_, _ = logger.Write(longLevelTestMessage)
+		}
+	})
 }
-
-func BenchmarkZero_Write(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard)
-
-	b.ReportAllocs()
-	b.ResetTimer()
-
-	for n := 0; n < b.N; n++ {
-		_, _ = logger.Write(testMessage)
-	}
-}
-
-/******************************************************************************
-*                                 Logg.Print                                  *
-******************************************************************************/
 
 func BenchmarkLogg_Print(b *testing.B) {
 	b.ReportAllocs()
@@ -141,10 +139,6 @@ func BenchmarkLogg_Debugf(b *testing.B) {
 	})
 }
 
-/******************************************************************************
-*                           Internal log.Print                                *
-******************************************************************************/
-
 func Benchmark_Log(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -157,10 +151,6 @@ func Benchmark_Log(b *testing.B) {
 		}
 	})
 }
-
-/******************************************************************************
-*                          Logg vs Zerolog (log)                              *
-******************************************************************************/
 
 func BenchmarkLogg_Log(b *testing.B) {
 	b.ReportAllocs()
@@ -176,21 +166,6 @@ func BenchmarkLogg_Log(b *testing.B) {
 	})
 }
 
-//func BenchmarkZero_Log(b *testing.B) {
-//	b.ReportAllocs()
-//	b.ResetTimer()
-//
-//	output := zerolog.ConsoleWriter{Out: ioutil.Discard, TimeFormat: time.RFC3339}
-//	logger := zerolog.New(output)
-//	log.SetOutput(logger)
-//
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			log.Print(testMessage)
-//		}
-//	})
-//}
-
 func BenchmarkLoggLog_Json(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -205,36 +180,3 @@ func BenchmarkLoggLog_Json(b *testing.B) {
 		}
 	})
 }
-
-//func BenchmarkZerolog_Json(b *testing.B) {
-//	b.ReportAllocs()
-//	b.ResetTimer()
-//
-//	logger := zerolog.New(ioutil.Discard)
-//	log.SetOutput(logger)
-//
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			log.Print(testMessage)
-//		}
-//	})
-//}
-
-/******************************************************************************
-*                           Internal functions                                *
-******************************************************************************/
-
-//func BenchmarkMessage_defineTime(b *testing.B) {
-//	b.ReportAllocs()
-//	b.ResetTimer()
-//
-//	m := &message{
-//		t: time.Now(),
-//	}
-//
-//	b.RunParallel(func(pb *testing.PB) {
-//		for pb.Next() {
-//			m.defineTime()
-//		}
-//	})
-//}

@@ -44,10 +44,9 @@ func caller(calldepth int, shortFile bool) (file string, line int) {
 	return
 }
 
-func timestamp(t time.Time, flags int) (buf []byte) {
+func appendTimestamp(t time.Time, flags int, dst []byte) []byte {
 	if t.IsZero() {
-		buf = append(buf, "0000-00-00 00:00:00"...)
-		return
+		return append(dst, "0000-00-00 00:00:00"...)
 	}
 
 	t = t.Add(time.Nanosecond * 500) // To round under microsecond
@@ -62,7 +61,7 @@ func timestamp(t time.Time, flags int) (buf []byte) {
 	micro := t.Nanosecond() / 1000
 
 	if flags&log.Ldate != 0 && flags&log.Ltime != 0 {
-		buf = append(buf, []byte{
+		dst = append(dst, []byte{
 			digits10[year100], digits01[year100],
 			digits10[year1], digits01[year1],
 			'-',
@@ -77,7 +76,7 @@ func timestamp(t time.Time, flags int) (buf []byte) {
 			digits10[second], digits01[second],
 		}...)
 	} else if flags&log.Ldate != 0 && flags&log.Ltime == 0 {
-		buf = append(buf, []byte{
+		dst = append(dst, []byte{
 			digits10[year100], digits01[year100],
 			digits10[year1], digits01[year1],
 			'-',
@@ -86,7 +85,7 @@ func timestamp(t time.Time, flags int) (buf []byte) {
 			digits10[day], digits01[day],
 		}...)
 	} else if flags&log.Ldate == 0 && flags&log.Ltime != 0 {
-		buf = append(buf, []byte{
+		dst = append(dst, []byte{
 			digits10[hour], digits01[hour],
 			':',
 			digits10[minute], digits01[minute],
@@ -99,7 +98,7 @@ func timestamp(t time.Time, flags int) (buf []byte) {
 		micro10000 := micro / 10000
 		micro100 := micro / 100 % 100
 		micro1 := micro % 100
-		buf = append(buf, []byte{
+		dst = append(dst, []byte{
 			'.',
 			digits10[micro10000], digits01[micro10000],
 			digits10[micro100], digits01[micro100],
@@ -107,7 +106,7 @@ func timestamp(t time.Time, flags int) (buf []byte) {
 		}...)
 	}
 
-	return
+	return dst
 }
 
 func defineLevel(data *[]byte) (lvl level) {
@@ -117,56 +116,60 @@ func defineLevel(data *[]byte) (lvl level) {
 		return
 	}
 
-	if (*data)[0] == '[' {
-		y := bytes.IndexByte(*data, ']')
-		if y > 0 {
-			*data = (*data)[1:]
-			*data = append((*data)[:y-1], (*data)[y:]...)
-		}
+	leftPadding := 0
+	rightPadding := 2
+	maxRightPadding := 7
+	if maxRightPadding > len(*data) {
+		maxRightPadding = len(*data)
 	}
 
-	if (*data)[0] == 'D' || (*data)[0] == 'I' || (*data)[0] == 'E' || (*data)[0] == 'W' || (*data)[0] == 'P' {
-		for i := 0; i < len(longLevels); i++ {
-			l := longLevels[i]
-			if bytes.Contains((*data)[:5], []byte(l)) {
+	if (*data)[0] == '[' {
+		leftPadding = 1
+		rightPadding = 3
+	}
+
+	for lvl == Empty && rightPadding < maxRightPadding {
+		searchPart := (*data)[leftPadding:rightPadding]
+		for i := 0; i < len(levels); i++ {
+			if levels[i] == *(*string)(unsafe.Pointer(&searchPart)) {
+				if i > 4 {
+					i -= 5
+				}
 				lvl = level(i)
-				x := bytes.Index(*data, []byte(l))
-				*data = (*data)[x+len([]byte(l)):]
 				break
 			}
 		}
-
-		if lvl == Empty {
-			for i := 0; i < len(levels); i++ {
-				l := levels[i]
-				if bytes.Contains((*data)[:3], []byte(l)) {
-					lvl = level(i)
-					x := bytes.Index(*data, []byte(l))
-					*data = (*data)[x+len([]byte(l)):]
-					break
-				}
-			}
-		}
-	}
-
-	for (*data)[0] == 32 { // trip space
-		*data = append((*data)[:0], (*data)[1:]...)
+		rightPadding++
 	}
 
 	return
 }
 
-func colorize(buf *[]byte, color int) {
-	*buf = append([]byte(fmt.Sprintf("%v[%dm", escape, 30+color)), *buf...)
-	*buf = append(*buf, []byte(escapeClose)...)
+func removeLevel(data []byte, lvl level) []byte {
+	if len(data) == 0 || lvl == Empty {
+		return data
+	}
+
+	if data[0] == '[' {
+		y := bytes.IndexByte(data, ']')
+		if y > 0 {
+			data = (data)[1:]
+			data = append(data[:y-1], data[y:]...)
+		}
+	}
+
+	x := bytes.IndexByte(data, ' ')
+	if x > 0 {
+		data = data[x:]
+	}
+
+	for data[0] == 32 { // trip space
+		data = append(data[:0], data[1:]...)
+	}
+
+	return data
 }
 
-func unsafeCompare(a string, b []byte) int {
-	abp := *(*[]byte)(unsafe.Pointer(&a))
-	return bytes.Compare(abp, b)
-}
-
-func unsafeEqual(a string, b []byte) bool {
-	bbp := *(*string)(unsafe.Pointer(&b))
-	return a == bbp
+func generate(v int) []byte {
+	return []byte(fmt.Sprintf("%s[%dm", escape, 30+v))
 }

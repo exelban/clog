@@ -85,10 +85,6 @@ func Print(args ...interface{}) { logg.Print(args...) }
 
 func Printf(format string, args ...interface{}) { logg.Printf(format, args...) }
 
-func Deb(args ...interface{}) { logg.Debug(args...) }
-
-func Debugf(format string, args ...interface{}) { logg.Debugf(format, args...) }
-
 func DebugMode() { logg.DebugMode() }
 
 func SetFormat(format format) { logg.SetFormat(format) }

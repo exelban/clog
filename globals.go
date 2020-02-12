@@ -6,7 +6,7 @@ import (
 )
 
 // Global Logg configuration
-var logg *Logg = New(os.Stderr)
+var logg = New(os.Stderr)
 
 // Default parameters
 const (
@@ -31,9 +31,8 @@ type (
 )
 
 var (
-	levels     = []string{"DBG", "INF", "ERR", "WRN", "PNC"}
-	longLevels = []string{"DEBUG", "INFO", "ERROR", "WARN", "PANIC"}
-	colors     = []int{HiCyan, HiYellow, Red, HiGreen, Red}
+	levels = []string{"DBG", "INF", "ERR", "WRN", "PNC", "DEBUG", "INFO", "ERROR", "WARN", "PANIC"}
+	colors = [][]byte{generate(HiCyan), generate(HiYellow), generate(Red), generate(HiGreen), generate(Red)}
 )
 
 // Output formats
@@ -65,6 +64,7 @@ const (
 	White
 )
 
+// High intensity colors
 const (
 	HiBlack int = iota + 60
 	HiRed

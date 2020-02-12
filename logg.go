@@ -54,7 +54,7 @@ func (l *Logg) Write(b []byte) (n int, err error) {
 		b = b[0 : n-1]
 	}
 
-	l.write(2, Empty, b)
+	l.write(3, Empty, b)
 	return
 }
 
@@ -63,23 +63,29 @@ func (l *Logg) write(calldepth int, level level, b []byte) {
 		return
 	}
 
-	m := newMessage(b, level, l.flags, calldepth)
+	if level == Empty {
+		level = defineLevel(&b)
+		b = removeLevel(b, level)
+	}
 
-	m.build()
-	if m.lvl < l.minLevel && m.lvl != Empty {
-		m.put()
+	if level != Empty && level < l.minLevel {
 		return
 	}
-	m.exec(l.format, l.color)
+
+	m := newMessage(level, ContextCallDepth+calldepth, l.flags, l.format, l.color)
 
 	out := l.out
-	if out == os.Stdout && (m.lvl == Error || m.lvl == Panic) {
+	if out == os.Stdout && (level > Error) {
 		out = os.Stderr
 	}
 
-	if err := write(out, m.buf); err != nil {
+	if err := write(l.out, m.build(b)); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "logg: could not write message: %v\n", err)
 	}
-
 	m.put()
+}
+
+// Writer returns the output destination for the standard logger.
+func (l *Logg) Writer() io.Writer {
+	return l.out
 }

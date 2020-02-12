@@ -67,7 +67,7 @@ func (m *message) buildJSON(b []byte) {
 	js := newJson()
 
 	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
-		js.buf = append(js.addField("time", js.buf), time.Now().Format(time.RFC3339)...)
+		js.buf = append(appendTimestamp(time.Now(), m.format, m.flags, js.addField("time", js.buf)))
 	}
 
 	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {
@@ -97,7 +97,7 @@ func (m *message) buildPretty(b []byte) {
 	}
 
 	if m.flags&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
-		m.buf = appendTimestamp(time.Now(), m.flags, m.buf)
+		m.buf = appendTimestamp(time.Now(), m.format, m.flags, m.buf)
 	}
 
 	if m.flags&(log.Lshortfile|log.Llongfile) != 0 {

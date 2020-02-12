@@ -40,9 +40,10 @@ func Test_caller(t *testing.T) {
 func Test_timestamp(t *testing.T) {
 	now := time.Now()
 	tests := map[string]struct {
-		t     time.Time
-		flags int
-		buf   []byte
+		t      time.Time
+		flags  int
+		format format
+		buf    []byte
 	}{
 		"empty": {
 			t:     time.Time{},
@@ -84,7 +85,7 @@ func Test_timestamp(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			buf := []byte{}
-			buf = appendTimestamp(tc.t, tc.flags, buf)
+			buf = appendTimestamp(tc.t, tc.format, tc.flags, buf)
 
 			if !bytes.Equal(buf, tc.buf) {
 				t.Errorf("wrong timestamp. Expected: %s, received: %s", string(tc.buf), string(buf))
@@ -101,7 +102,7 @@ func Benchmark_appendTimestamp(b *testing.B) {
 	buf := []byte{}
 
 	for n := 0; n < b.N; n++ {
-		appendTimestamp(now, log.LstdFlags, buf)
+		appendTimestamp(now, Pretty, log.LstdFlags, buf)
 	}
 }
 

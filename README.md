@@ -3,7 +3,6 @@
 [![Tests](https://img.shields.io/github/workflow/status/pkgz/logg/Code%20coverage)](https://github.com/pkgz/logg/actions)
 [![codecov](https://img.shields.io/codecov/c/gh/pkgz/logg)](https://codecov.io/gh/pkgz/logg)
 
-
 ![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v3_pretty.png)  
 ![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v3_json.png)  
 Better log experience in golang.
@@ -108,30 +107,30 @@ There are a few parameters which you can set:
 ## Benchmarks
 
 ```sh
-BenchmarkLog_Print/long_message-8         	        1676541	            908 ns/op	     592 B/op	       2 allocs/op
-BenchmarkLog_Print/short_message-8        	        1700326	            690 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLog_Print/short_level-8          	        1806188	            710 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLog_Print/long_level-8           	        1780255	            781 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLogg_Log_Print/long_message-8    	        883708	            1250 ns/op	     593 B/op	       2 allocs/op
-BenchmarkLogg_Log_Print/short_message-8   	        1000000	            1034 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLogg_Log_Print/short_level-8     	        1419847	            926 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLogg_Log_Print/long_level-8      	        1576074	            701 ns/op	      80 B/op	       2 allocs/op
-BenchmarkLogg_Write_Pretty/long_message-8 	        12929612	        102 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Pretty/short_message-8         	12415136	        93.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Pretty/short_level-8           	14326122	        79.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Pretty/long_level-8            	14781205	        82.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Json/long_message-8            	 9923089	        112 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Json/short_message-8           	11412260	        106 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Json/short_level-8             	13234461	        94.0 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Write_Json/long_level-8              	13051018	        94.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogg_Print/long_level-8                   	 8072880	        166 ns/op	     144 B/op	       3 allocs/op
-BenchmarkLogg_Print/long_message-8                 	 3646544	        329 ns/op	    1170 B/op	       3 allocs/op
-BenchmarkLogg_Print/short_message-8                	 7247292	        174 ns/op	     144 B/op	       3 allocs/op
-BenchmarkLogg_Print/short_level-8                  	 6156025	        179 ns/op	     144 B/op	       3 allocs/op
-BenchmarkLogg_Printf/short_level-8                 	 7884908	        153 ns/op	     128 B/op	       2 allocs/op
-BenchmarkLogg_Printf/long_level-8                  	 8083395	        151 ns/op	     128 B/op	       2 allocs/op
-BenchmarkLogg_Printf/long_message-8                	 3014763	        409 ns/op	    1154 B/op	       2 allocs/op
-BenchmarkLogg_Printf/short_message-8               	 7392619	        167 ns/op	     128 B/op	       2 allocs/op
+BenchmarkLog_Print/long_message-8         	 1799361	       703 ns/op	     592 B/op	       2 allocs/op
+BenchmarkLog_Print/short_message-8        	 2444176	       491 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLog_Print/short_level-8          	 2451745	       494 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLog_Print/long_level-8           	 2364008	       493 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLogg_Log_Print/long_message-8    	 1443676	       825 ns/op	     593 B/op	       2 allocs/op
+BenchmarkLogg_Log_Print/short_message-8   	 1701645	       713 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLogg_Log_Print/short_level-8     	 1882834	       636 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLogg_Log_Print/long_level-8      	 1862190	       676 ns/op	      80 B/op	       2 allocs/op
+BenchmarkLogg_Write_Pretty/long_message-8 	13835029	        90.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Pretty/short_message-8         	13607654	        86.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Pretty/short_level-8           	16418979	        73.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Pretty/long_level-8            	15362362	        76.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Json/long_message-8            	11209905	       107 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Json/short_message-8           	11571448	       105 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Json/short_level-8             	13749747	        87.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Write_Json/long_level-8              	13415761	        89.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogg_Print/long_message-8                 	 4293176	       311 ns/op	    1170 B/op	       3 allocs/op
+BenchmarkLogg_Print/short_message-8                	 7748691	       155 ns/op	     144 B/op	       3 allocs/op
+BenchmarkLogg_Print/short_level-8                  	 8459841	       141 ns/op	     144 B/op	       3 allocs/op
+BenchmarkLogg_Print/long_level-8                   	 8349727	       143 ns/op	     144 B/op	       3 allocs/op
+BenchmarkLogg_Printf/long_message-8                	 3314443	       358 ns/op	    1154 B/op	       2 allocs/op
+BenchmarkLogg_Printf/short_message-8               	 7906260	       153 ns/op	     128 B/op	       2 allocs/op
+BenchmarkLogg_Printf/short_level-8                 	 8624889	       144 ns/op	     128 B/op	       2 allocs/op
+BenchmarkLogg_Printf/long_level-8                  	 8253075	       145 ns/op	     128 B/op	       2 allocs/op
 ```
 
 

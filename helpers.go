@@ -44,7 +44,7 @@ func caller(calldepth int, shortFile bool) (file string, line int) {
 	return
 }
 
-func appendTimestamp(t time.Time, flags int, dst []byte) []byte {
+func appendTimestamp(t time.Time, format format, flags int, dst []byte) []byte {
 	if t.IsZero() {
 		return append(dst, "0000-00-00 00:00:00"...)
 	}
@@ -60,6 +60,11 @@ func appendTimestamp(t time.Time, flags int, dst []byte) []byte {
 	second := t.Second()
 	micro := t.Nanosecond() / 1000
 
+	var space byte = ' '
+	if format == Json {
+		space = 'T'
+	}
+
 	if flags&log.Ldate != 0 && flags&log.Ltime != 0 {
 		dst = append(dst, []byte{
 			digits10[year100], digits01[year100],
@@ -68,7 +73,7 @@ func appendTimestamp(t time.Time, flags int, dst []byte) []byte {
 			digits10[month], digits01[month],
 			'-',
 			digits10[day], digits01[day],
-			' ',
+			space,
 			digits10[hour], digits01[hour],
 			':',
 			digits10[minute], digits01[minute],
@@ -103,6 +108,17 @@ func appendTimestamp(t time.Time, flags int, dst []byte) []byte {
 			digits10[micro10000], digits01[micro10000],
 			digits10[micro100], digits01[micro100],
 			digits10[micro1], digits01[micro1],
+		}...)
+	}
+
+	if format == Json {
+		_, s := t.Zone()
+		dst = append(dst, []byte{
+			'+',
+			digits10[s/3600], digits01[s/3600],
+			':',
+			'0',
+			'0',
 		}...)
 	}
 

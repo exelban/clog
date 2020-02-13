@@ -50,8 +50,9 @@ type (
 )
 
 var (
-	levels = []string{"DBG", "INF", "ERR", "WRN", "PNC", "DEBUG", "INFO", "ERROR", "WARN", "PANIC"}
-	colors = [][]byte{generate(HiCyan), generate(HiYellow), generate(Red), generate(HiGreen), generate(Red)}
+	levels    = []string{"DBG", "INF", "ERR", "WRN", "PNC", "DEBUG", "INFO", "ERROR", "WARN", "PANIC"}
+	colors    = [][]byte{generate(HiCyan), generate(HiYellow), generate(Red), generate(HiGreen), generate(Red)}
+	timeColor = generate(7)
 )
 
 // Output formats
@@ -93,4 +94,18 @@ const (
 	HiMagenta
 	HiCyan
 	HiWhite
+)
+
+// Base attributes
+const (
+	Reset int = iota
+	Bold
+	Faint
+	Italic
+	Underline
+	BlinkSlow
+	BlinkRapid
+	ReverseVideo
+	Concealed
+	CrossedOut
 )

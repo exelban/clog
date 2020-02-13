@@ -91,12 +91,14 @@ func (m *message) buildJSON(b []byte) {
 }
 
 func (m *message) buildPretty(b []byte) {
-	if m.color && m.level != Empty {
-		m.buf = append(m.buf, colors[m.level]...)
-	}
-
 	if m.flags&(Ldate|Ltime|Lmicroseconds) != 0 {
-		m.buf = appendTimestamp(time.Now(), m.format, m.flags, m.buf)
+		if m.color {
+			m.buf = append(m.buf, timeColor...)
+			m.buf = appendTimestamp(time.Now(), m.format, m.flags, m.buf)
+			m.buf = append(m.buf, []byte(escapeClose)...)
+		} else {
+			m.buf = appendTimestamp(time.Now(), m.format, m.flags, m.buf)
+		}
 	}
 
 	if m.flags&(Lshortfile|Llongfile) != 0 {
@@ -114,7 +116,18 @@ func (m *message) buildPretty(b []byte) {
 		if m.flags&(Ldate|Ltime|Lmicroseconds) != 0 || m.flags&(Lshortfile|Llongfile) != 0 {
 			m.buf = append(m.buf, ' ')
 		}
+
+		if m.color && m.level != Empty {
+			m.buf = append(m.buf, colors[m.level]...)
+			m.buf = append(m.buf, escape+"[1m"...)
+		}
+
 		m.buf = append(m.buf, levels[m.level]...)
+
+		if m.color && m.level != Empty {
+			m.buf = append(m.buf, escapeClose...)
+			m.buf = append(m.buf, escapeClose...)
+		}
 	}
 
 	if len(b) != 0 {
@@ -123,9 +136,5 @@ func (m *message) buildPretty(b []byte) {
 		}
 
 		m.buf = append(m.buf, b...)
-	}
-
-	if m.color && m.level != Empty {
-		m.buf = append(m.buf, []byte(escapeClose)...)
 	}
 }

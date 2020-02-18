@@ -3,7 +3,7 @@
 [![Tests](https://img.shields.io/github/workflow/status/pkgz/logg/Code%20coverage)](https://github.com/pkgz/logg/actions)
 [![codecov](https://img.shields.io/codecov/c/gh/pkgz/logg)](https://codecov.io/gh/pkgz/logg)
 
-![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v3_pretty.png)  
+![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v3_pretty.png?v1)  
 ![](https://serhiy.s3.eu-central-1.amazonaws.com/Github_repo/logg/v3_json.png)  
 Better log experience in golang.
 

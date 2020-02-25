@@ -171,8 +171,37 @@ func TestLogg(t *testing.T) {
 	}
 }
 
+func TestDebugMode(t *testing.T) {
+	t.Run("no debug mode", func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		logger := New(buf)
+		logger.Print("[DEBUG] test")
+
+		if buf.Len() != 0 {
+			t.Errorf("Debug message must be missed. Received: %s", readFromBuffer(buf))
+		}
+
+		logger.Print("[INFO] test")
+
+		if buf.Len() == 0 {
+			t.Errorf("Info message must writed missed. Received: %s", readFromBuffer(buf))
+		}
+	})
+
+	t.Run("debug mode", func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		logger := New(buf)
+		logger.DebugMode()
+
+		logger.Print("[DEBUG] test")
+
+		if buf.Len() == 0 {
+			t.Errorf("Debug message must be missed. Received: %s", readFromBuffer(buf))
+		}
+	})
+}
+
 func readFromBuffer(buf *bytes.Buffer) string {
 	readBuf, _ := ioutil.ReadAll(buf)
-	line := strings.Replace(string(readBuf), "\n", "", 1)
-	return string(line)
+	return strings.Replace(string(readBuf), "\n", "", 1)
 }

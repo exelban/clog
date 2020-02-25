@@ -12,7 +12,7 @@ const (
 	DefaultFormat       = Pretty
 	DefaultColorOutput  = true
 	DefaultFlags        = LstdFlags
-	DefaultMinimumLevel = Debug
+	DefaultMinimumLevel = Info
 
 	ContextCallDepth = 4
 

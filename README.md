@@ -100,7 +100,7 @@ There are a few parameters which you can set:
 | `SetWriter(io.Writer) ` | ioutil.Discard | Set writer. |
 | `SetFormat(logg.format) ` | Pretty | Set output format. Can be pretty or json. |
 | `SetFlags(int) ` | int | Set time and caller flags. |
-| `MinLevel(level) ` | Debug | Minimum level for logs. Logs lower this level will be not writed. |
+| `MinLevel(level) ` | Info | Minimum level for logs. Logs lower this level will be not writed. |
 | `ToggleColor(bool) ` | true | Enable or disable output colorizing. |
 | `DebugMode() ` | | Will enable a debug mode. Debug mode will add milliseconds to timestamp and log caller. |
 

@@ -97,3 +97,5 @@ func SetFlags(flags int) { logg.SetFlags(flags) }
 func SetWriter(w io.Writer) { logg.SetWriter(w) }
 
 func ToggleColor(value bool) { logg.ToggleColor(value) }
+
+func MinLevel(level level) { logg.MinLevel(level) }
